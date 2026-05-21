@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { generateFirstWillDraft, type WillIntakeInput } from '@/ai/flows/generate-first-will-draft';
-import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2, Gift, Percent, Layers, User, Briefcase } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2, Gift, Percent, Layers, Briefcase } from 'lucide-react';
 
 export default function IntakePage() {
   const router = useRouter();
@@ -210,7 +210,7 @@ export default function IntakePage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <Label className="text-lg">Specific Gifts <LegalNote title="Specific Legacies">
-          <p>Gifting specific items (e.g. "My gold watch") to specific people. These are given out BEFORE the remaining estate is split.</p>
+          <p>Gifting specific assets (e.g. "My gold watch") to specific people. These are given out BEFORE the remaining estate is split.</p>
         </LegalNote></Label>
         <Button variant="outline" size="sm" onClick={addSpecificGift}>
           <Plus className="h-4 w-4 mr-2" /> Add Gift
@@ -288,7 +288,7 @@ export default function IntakePage() {
       <div className="flex justify-between items-center">
         <Label className="text-lg">
           {distributionStrategy === 'percentage' ? "All my assets will go to the following beneficiaries" : "The Residue (Remainder)"}
-          <LegalNote title={distributionStrategy === 'percentage' ? "Full Distribution" : "Residuary Estate"}>
+          <LegalNote title={distributionStrategy === 'percentage' ? "Pooled Distribution" : "Residuary Estate"}>
             <p><strong>Definition:</strong> This refers to everything you own that has not been specifically gifted elsewhere in the Will, after all your debts, funeral expenses, and taxes have been paid.</p>
           </LegalNote>
         </Label>
@@ -387,7 +387,7 @@ export default function IntakePage() {
               {step === 1 && "Let's begin with your personal details for your legal will."}
               {step === 2 && "List your loved ones to ensure they are provided for."}
               {step === 3 && "Choose who will handle your affairs and care for your children."}
-              {step === 4 && "Decide how your property and gifts will be handled."}
+              {step === 4 && "Decide how your assets will be handled."}
               {step === 5 && "Review final clauses and funeral wishes."}
             </CardDescription>
           </CardHeader>
@@ -494,8 +494,9 @@ export default function IntakePage() {
                     <Label className="text-lg">Executors <LegalNote title="Executor Selection">
                       <p><strong>Definition:</strong> The person who gathers your assets, pays your debts, and distributes your estate after death.</p>
                       <p><strong>Tips:</strong> Choose someone you trust implicitly, who is likely to survive you. Most people choose their spouse or adult children.</p>
+                      <p><strong>Substitutes:</strong> Adding a substitute executor is NOT mandatory, but recommended if your primary choice is elderly, lives overseas, or may be unable to act.</p>
                     </LegalNote></Label>
-                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: false }]})}>
+                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: true }]})}>
                       <Plus className="h-4 w-4 mr-2" /> Add Substitute
                     </Button>
                   </div>
@@ -565,7 +566,7 @@ export default function IntakePage() {
                       <Percent className={`h-8 w-8 ${distributionStrategy === 'percentage' ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="flex-1">
                         <span className="font-bold block mb-1">Simple Percentage Split</span>
-                        <span className="text-xs text-muted-foreground leading-snug block">Best for those who want a simple distribution without listing every single item. Everything is split by percentages.</span>
+                        <span className="text-xs text-muted-foreground leading-snug block">Best for those who want a simple distribution. All your assets are pooled and split by percentages among your chosen beneficiaries.</span>
                       </div>
                     </Label>
                     <Label htmlFor="spec" className={`flex flex-col md:flex-row items-center gap-6 p-6 border rounded-xl cursor-pointer transition-all ${distributionStrategy === 'specific' ? 'border-primary bg-white shadow-md ring-2 ring-primary/20' : 'bg-muted/20 hover:bg-white'}`}>
@@ -573,7 +574,7 @@ export default function IntakePage() {
                       <Gift className={`h-8 w-8 ${distributionStrategy === 'specific' ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="flex-1">
                         <span className="font-bold block mb-1">Specific Gifts Only</span>
-                        <span className="text-xs text-muted-foreground leading-snug block">Best for ensuring specific items (heirlooms, etc.) go to certain people. *Requires manual tracking of all items.</span>
+                        <span className="text-xs text-muted-foreground leading-snug block">Best for ensuring specific assets (heirlooms, bank accounts, etc.) go to certain people.</span>
                       </div>
                     </Label>
                     <Label htmlFor="hyb" className={`flex flex-col md:flex-row items-center gap-6 p-6 border rounded-xl cursor-pointer transition-all ${distributionStrategy === 'hybrid' ? 'border-primary bg-white shadow-md ring-2 ring-primary/20' : 'bg-muted/20 hover:bg-white'}`}>
@@ -581,7 +582,7 @@ export default function IntakePage() {
                       <Layers className={`h-8 w-8 ${distributionStrategy === 'hybrid' ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="flex-1">
                         <span className="font-bold block mb-1">Hybrid Approach</span>
-                        <span className="text-xs text-muted-foreground leading-snug block">Best of both worlds: Make some specific gifts, while the rest of your assets are divided by percentage.</span>
+                        <span className="text-xs text-muted-foreground leading-snug block">Best of both worlds: Make some specific gifts, while the rest of your pooled assets are divided by percentage.</span>
                       </div>
                     </Label>
                   </RadioGroup>
