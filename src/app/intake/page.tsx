@@ -17,13 +17,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { generateFirstWillDraft, type WillIntakeInput } from '@/ai/flows/generate-first-will-draft';
 import { Logo } from '@/components/logo';
-import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2, Gift, Percent, Layers } from 'lucide-react';
 
 export default function IntakePage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [appointDifferentTrustees, setAppointDifferentTrustees] = useState(false);
+  const [distributionStrategy, setDistributionStrategy] = useState<'percentage' | 'specific' | 'hybrid' | null>(null);
   const totalSteps = 5;
 
   const [formData, setFormData] = useState<WillIntakeInput>({
@@ -37,15 +38,15 @@ export default function IntakePage() {
     children: [],
   });
 
-  const nextStep = () => setStep(s => Math.min(s + 1, totalSteps));
+  const nextStep = () => {
+    if (step === 4 && !distributionStrategy) return;
+    setStep(s => Math.min(s + 1, totalSteps));
+  };
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const handleSmartDate = (value: string, index: number) => {
     const kids = [...(formData.children || [])];
     kids[index].dob = value;
-    
-    // Attempt smart parsing on blur or specific triggers could go here, 
-    // but for immediate feedback we keep the text and try to format if it looks like a date
     setFormData({...formData, children: kids});
   };
 
@@ -54,7 +55,6 @@ export default function IntakePage() {
     const val = kids[index].dob;
     if (!val) return;
 
-    // Try standard Date parsing
     const d = new Date(val);
     if (!isNaN(d.getTime())) {
       kids[index].dob = format(d, 'dd-MM-yyyy');
@@ -62,7 +62,6 @@ export default function IntakePage() {
       return;
     }
 
-    // Try common Singapore formats if standard fails
     const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'dd.MM.yyyy', 'yyyy-MM-dd'];
     for (const f of formats) {
       try {
@@ -123,14 +122,14 @@ export default function IntakePage() {
               {step === 1 && "Welcome & Identification"}
               {step === 2 && "Family & Dependents"}
               {step === 3 && "Appointments"}
-              {step === 4 && "Bequests & Residue"}
+              {step === 4 && "Distribution of Assets"}
               {step === 5 && "Final Instructions"}
             </CardTitle>
             <CardDescription className="text-sm">
               {step === 1 && "Let's begin with your personal details for your Singapore Will."}
               {step === 2 && "Listing your loved ones to ensure they are provided for."}
               {step === 3 && "Choosing who will handle your affairs and care for your children."}
-              {step === 4 && "Deciding how your money and property will be distributed."}
+              {step === 4 && "Deciding how your property and gifts will be handled."}
               {step === 5 && "Reviewing final clauses and funeral wishes."}
             </CardDescription>
           </CardHeader>
@@ -143,18 +142,18 @@ export default function IntakePage() {
                     <CheckCircle2 className="h-5 w-5" /> A Warm Welcome from Forward Legal
                   </h3>
                   <p className="text-sm text-[#555555] font-medium leading-relaxed">
-                    We are honored to assist you with your estate planning. This questionnaire captures all necessary details for our lawyers to prepare a robust Will under the <strong>Singapore Wills Act</strong>. 
+                    We are honored to assist you. This questionnaire captures the details our lawyers need to prepare a professional Will under the <strong>Singapore Wills Act</strong>. 
                   </p>
                   <ul className="text-xs text-[#666666] space-y-1 list-disc pl-4">
                     <li>Your data is encrypted and kept strictly confidential.</li>
-                    <li>The information provided will be forwarded to our lawyers who will prepare a draft for your review.</li>
-                    <li>Once the draft is ready, we will contact you to finalize and arrange for the legal signing.</li>
+                    <li>Information provided will be forwarded to our lawyers who will prepare a draft for your review.</li>
+                    <li>We will contact you to finalize the document and arrange for legal signing.</li>
                   </ul>
                 </div>
 
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label>Full Name (as per NRIC/Passport) <LegalNote title="Testator">The person who makes the Will. <strong>Tip:</strong> Ensure the name matches your NRIC exactly to avoid probate delays later.</LegalNote></Label>
+                    <Label>Full Name (as per NRIC/Passport) <LegalNote title="Testator">The person who makes the Will. Ensure the name matches your NRIC exactly to avoid probate delays later.</LegalNote></Label>
                     <Input 
                       value={formData.clientName} 
                       onChange={(e) => setFormData({...formData, clientName: e.target.value})} 
@@ -257,7 +256,7 @@ export default function IntakePage() {
                   <div className="flex justify-between items-center">
                     <Label className="text-lg">Executors <LegalNote title="Executor Selection">
                       <p><strong>Definition:</strong> The person who gathers your assets, pays your debts, and distributes your estate after death.</p>
-                      <p><strong>Tips:</strong> Choose someone you trust implicitly, who is responsible, and likely to be around. Most people choose their spouse or adult children.</p>
+                      <p><strong>Tips:</strong> Choose someone you trust implicitly, who is likely to survive you. Most people choose their spouse or adult children.</p>
                     </LegalNote></Label>
                     <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: false }]})}>
                       <Plus className="h-4 w-4 mr-2" /> Add Substitute
@@ -292,32 +291,26 @@ export default function IntakePage() {
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <Label className="text-lg">Trustees <LegalNote title="Trustee vs Executor">
-                      <p><strong>Executor:</strong> Handles immediate administrative tasks (probate, paying debts).</p>
-                      <p><strong>Trustee:</strong> Manages assets over the long-term (e.g. if you have minor children who can't receive their inheritance until age 21).</p>
-                      <p><strong>Tip:</strong> Usually, the Executor and Trustee are the <strong>same person</strong>. You only need different people if you want one person to do the paperwork and another to manage the money for your kids.</p>
+                      <p><strong>Executor:</strong> Handles administrative tasks (probate, debts).</p>
+                      <p><strong>Trustee:</strong> Manages assets long-term (e.g., for minors until age 21).</p>
+                      <p><strong>Tip:</strong> Usually, the Executor and Trustee are the <strong>same person</strong>.</p>
                     </LegalNote></Label>
                     <div className="flex items-center space-x-2">
                       <Switch checked={appointDifferentTrustees} onCheckedChange={setAppointDifferentTrustees} />
                       <span className="text-xs font-medium">Appoint different Trustees?</span>
                     </div>
                   </div>
-                  
-                  {!appointDifferentTrustees ? (
+                  {!appointDifferentTrustees && (
                     <p className="text-xs text-[#666666] italic bg-secondary/50 p-3 rounded">
-                      The Executors listed above will also act as your Trustees for any long-term asset management.
+                      Executors listed above will also act as your Trustees.
                     </p>
-                  ) : (
-                    <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground text-xs">
-                      [Trustee management fields enabled - Lawyers will contact you for these details]
-                    </div>
                   )}
                 </div>
 
                 {(formData.children || []).length > 0 && (
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-lg">Guardian <LegalNote title="Legal Guardian">
-                      <p>The person who will have legal custody and responsibility for raising your children if both parents pass away before they reach 21.</p>
-                      <p><strong>Tip:</strong> Choose someone who shares your values and has a good relationship with your children.</p>
+                      <p>The person responsible for raising minor children if both parents pass away before they reach 21.</p>
                     </LegalNote></Label>
                     <div className="grid grid-cols-2 gap-4">
                       <Input placeholder="Guardian Name" value={formData.guardianName || ''} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} />
@@ -329,72 +322,201 @@ export default function IntakePage() {
             )}
 
             {step === 4 && (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-lg">Residuary Estate <LegalNote title="The Residue">
-                      <p>The "Residue" is everything you own that hasn't been specifically gifted elsewhere. This usually includes your bank accounts, investments, and property.</p>
-                    </LegalNote></Label>
-                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
-                      <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
-                    </Button>
-                  </div>
-                  {formData.residuaryDistribution.map((dist, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-lg relative">
-                      <div className="md:col-span-5 space-y-2">
-                        <Label className="text-[10px] uppercase">Beneficiary Name</Label>
-                        <div className="flex gap-2">
-                          <Input className="flex-1" value={dist.name} onChange={(e) => {
+              <div className="space-y-8 animate-in slide-in-from-right duration-300">
+                <div className="bg-primary/5 p-6 rounded-xl border border-primary/20 mb-6">
+                  <h3 className="font-bold text-primary mb-2">How would you like to distribute your assets?</h3>
+                  <p className="text-xs text-[#555555] leading-relaxed mb-4">
+                    Choose the distribution strategy that best fits your needs. Our lawyers will refine the details based on your selection.
+                  </p>
+                  <RadioGroup value={distributionStrategy || ''} onValueChange={(val) => setDistributionStrategy(val as any)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Label 
+                      htmlFor="perc" 
+                      className={`flex flex-col items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${distributionStrategy === 'percentage' ? 'border-primary bg-white shadow-md ring-2 ring-primary/20' : 'bg-muted/20 hover:bg-white'}`}
+                    >
+                      <RadioGroupItem value="percentage" id="perc" className="sr-only" />
+                      <Percent className={`h-8 w-8 ${distributionStrategy === 'percentage' ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className="font-bold text-center">Simple % Split</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Distribute everything by percentages.</span>
+                    </Label>
+
+                    <Label 
+                      htmlFor="spec" 
+                      className={`flex flex-col items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${distributionStrategy === 'specific' ? 'border-primary bg-white shadow-md ring-2 ring-primary/20' : 'bg-muted/20 hover:bg-white'}`}
+                    >
+                      <RadioGroupItem value="specific" id="spec" className="sr-only" />
+                      <Gift className={`h-8 w-8 ${distributionStrategy === 'specific' ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className="font-bold text-center">Specific Gifts</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Assign items to specific people.</span>
+                    </Label>
+
+                    <Label 
+                      htmlFor="hyb" 
+                      className={`flex flex-col items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all ${distributionStrategy === 'hybrid' ? 'border-primary bg-white shadow-md ring-2 ring-primary/20' : 'bg-muted/20 hover:bg-white'}`}
+                    >
+                      <RadioGroupItem value="hybrid" id="hyb" className="sr-only" />
+                      <Layers className={`h-8 w-8 ${distributionStrategy === 'hybrid' ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <span className="font-bold text-center">Hybrid Approach</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Some specific gifts + residual split.</span>
+                    </Label>
+                  </RadioGroup>
+                </div>
+
+                {distributionStrategy === 'percentage' && (
+                  <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-lg">Percentage Distribution (The Residue) <LegalNote title="Schedule of Assets">
+                        <p>With this option, your lawyers will add a <strong>Schedule of Assets</strong> to the Will. After your death, your Executor will ascertain your assets (bank accounts, property, shares) and split the total value by these percentages.</p>
+                      </LegalNote></Label>
+                      <Button variant="outline" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
+                        <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
+                      </Button>
+                    </div>
+                    {formData.residuaryDistribution.map((dist, i) => (
+                      <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-lg">
+                        <div className="md:col-span-5 space-y-2">
+                          <Label className="text-[10px] uppercase">Name</Label>
+                          <div className="flex gap-2">
+                            <Input className="flex-1" value={dist.name} onChange={(e) => {
+                              const d = [...formData.residuaryDistribution];
+                              d[i].name = e.target.value;
+                              setFormData({...formData, residuaryDistribution: d});
+                            }} />
+                            {formData.children && formData.children.length > 0 && (
+                              <Select onValueChange={(val) => {
+                                const child = formData.children?.[parseInt(val)];
+                                if (!child) return;
+                                const d = [...formData.residuaryDistribution];
+                                d[i] = { ...d[i], name: child.name, nric: child.nric };
+                                setFormData({ ...formData, residuaryDistribution: d });
+                              }}>
+                                <SelectTrigger className="w-10 px-2"><Users className="h-4 w-4" /></SelectTrigger>
+                                <SelectContent>{formData.children.map((c, idx) => (<SelectItem key={idx} value={idx.toString()}>{c.name}</SelectItem>))}</SelectContent>
+                              </Select>
+                            )}
+                          </div>
+                        </div>
+                        <div className="md:col-span-4 space-y-2">
+                          <Label className="text-[10px] uppercase">NRIC</Label>
+                          <Input value={dist.nric} onChange={(e) => {
                             const d = [...formData.residuaryDistribution];
-                            d[i].name = e.target.value;
+                            d[i].nric = e.target.value;
                             setFormData({...formData, residuaryDistribution: d});
                           }} />
-                          {formData.children && formData.children.length > 0 && (
-                            <Select onValueChange={(val) => {
-                              const child = formData.children?.[parseInt(val)];
-                              if (!child) return;
+                        </div>
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-[10px] uppercase">Share (%)</Label>
+                          <div className="flex gap-2">
+                            <Input value={dist.percentage} placeholder="e.g. 50%" onChange={(e) => {
                               const d = [...formData.residuaryDistribution];
-                              d[i] = { ...d[i], name: child.name, nric: child.nric };
-                              setFormData({ ...formData, residuaryDistribution: d });
-                            }}>
-                              <SelectTrigger className="w-10 px-2" title="Select child"><Users className="h-4 w-4" /></SelectTrigger>
-                              <SelectContent>{formData.children.map((c, idx) => (<SelectItem key={idx} value={idx.toString()}>{c.name}</SelectItem>))}</SelectContent>
-                            </Select>
-                          )}
+                              d[i].percentage = e.target.value;
+                              setFormData({...formData, residuaryDistribution: d});
+                            }} />
+                            {i > 0 && <Button variant="ghost" size="icon" onClick={() => {
+                               const d = [...formData.residuaryDistribution];
+                               d.splice(i, 1);
+                               setFormData({...formData, residuaryDistribution: d});
+                            }}><Trash2 className="h-4 w-4" /></Button>}
+                          </div>
                         </div>
                       </div>
-                      <div className="md:col-span-4 space-y-2">
-                        <Label className="text-[10px] uppercase">NRIC</Label>
-                        <Input value={dist.nric} onChange={(e) => {
-                          const d = [...formData.residuaryDistribution];
-                          d[i].nric = e.target.value;
-                          setFormData({...formData, residuaryDistribution: d});
-                        }} />
-                      </div>
-                      <div className="md:col-span-3 space-y-2">
-                        <Label className="text-[10px] uppercase">Share (%)</Label>
-                        <Input value={dist.percentage} placeholder="e.g. 50%" onChange={(e) => {
-                          const d = [...formData.residuaryDistribution];
-                          d[i].percentage = e.target.value;
-                          setFormData({...formData, residuaryDistribution: d});
-                        }} />
-                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(distributionStrategy === 'specific' || distributionStrategy === 'hybrid') && (
+                  <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-lg">Specific Gifts <LegalNote title="Specific Legacies">
+                        <p>Use this to gift specific items (e.g., "My 2024 Rolex Watch" or "My Property at 123 Orchard Rd") to specific people.</p>
+                      </LegalNote></Label>
+                      <Button variant="outline" size="sm" onClick={() => setFormData({...formData, specificBequests: [...(formData.specificBequests || []), { item: '', beneficiaryName: '', beneficiaryNric: '' }]})}>
+                        <Plus className="h-4 w-4 mr-2" /> Add Gift
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                    {(formData.specificBequests || []).map((gift, i) => (
+                      <div key={i} className="p-4 border rounded-lg bg-muted/10 space-y-4">
+                        <div className="flex justify-between">
+                          <Badge variant="outline">Gift #{i+1}</Badge>
+                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive cursor-pointer" onClick={() => {
+                            const g = [...(formData.specificBequests || [])];
+                            g.splice(i, 1);
+                            setFormData({...formData, specificBequests: g});
+                          }} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] uppercase">Description of Asset/Item</Label>
+                          <Input placeholder="e.g. Jewellery, Piano, Property address..." value={gift.item} onChange={(e) => {
+                            const g = [...(formData.specificBequests || [])];
+                            g[i].item = e.target.value;
+                            setFormData({...formData, specificBequests: g});
+                          }} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase">Beneficiary Name</Label>
+                            <Input value={gift.beneficiaryName} onChange={(e) => {
+                              const g = [...(formData.specificBequests || [])];
+                              g[i].beneficiaryName = e.target.value;
+                              setFormData({...formData, specificBequests: g});
+                            }} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] uppercase">Beneficiary NRIC</Label>
+                            <Input value={gift.beneficiaryNric} onChange={(e) => {
+                              const g = [...(formData.specificBequests || [])];
+                              g[i].beneficiaryNric = e.target.value;
+                              setFormData({...formData, specificBequests: g});
+                            }} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {distributionStrategy === 'hybrid' && (
+                  <div className="space-y-6 pt-6 border-t animate-in fade-in duration-700">
+                    <Label className="text-lg">The Residue <LegalNote title="Everything Else">
+                      <p>After giving the specific gifts listed above, how should the <strong>remaining</strong> assets (the residue) be split?</p>
+                    </LegalNote></Label>
+                    <div className="space-y-4">
+                      {formData.residuaryDistribution.map((dist, i) => (
+                        <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                           <div className="md:col-span-5"><Input placeholder="Name" value={dist.name} onChange={(e) => {
+                              const d = [...formData.residuaryDistribution]; d[i].name = e.target.value; setFormData({...formData, residuaryDistribution: d});
+                           }} /></div>
+                           <div className="md:col-span-4"><Input placeholder="NRIC" value={dist.nric} onChange={(e) => {
+                              const d = [...formData.residuaryDistribution]; d[i].nric = e.target.value; setFormData({...formData, residuaryDistribution: d});
+                           }} /></div>
+                           <div className="md:col-span-3 flex gap-2">
+                             <Input placeholder="%" value={dist.percentage} onChange={(e) => {
+                               const d = [...formData.residuaryDistribution]; d[i].percentage = e.target.value; setFormData({...formData, residuaryDistribution: d});
+                             }} />
+                             {i > 0 && <Button variant="ghost" size="icon" onClick={() => {
+                               const d = [...formData.residuaryDistribution]; d.splice(i, 1); setFormData({...formData, residuaryDistribution: d});
+                             }}><Trash2 className="h-4 w-4" /></Button>}
+                           </div>
+                        </div>
+                      ))}
+                      <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
+                        + Add Residual Beneficiary
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {step === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Funeral Wishes <LegalNote title="Optional">Funeral wishes are not legally binding in a Will, but they provide critical guidance for your family during a difficult time.</LegalNote></Label>
+                  <Label>Funeral Wishes <LegalNote title="Optional">Funeral wishes provide guidance for your family during a difficult time.</LegalNote></Label>
                   <Textarea value={formData.funeralWishes || ''} onChange={(e) => setFormData({...formData, funeralWishes: e.target.value})} placeholder="e.g. Cremation at Mandai, specific religious rites..." rows={4} />
                 </div>
                 <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
-                  <h4 className="font-bold text-primary mb-2 flex items-center gap-2">Legal Acknowledgement</h4>
+                  <h4 className="font-bold text-primary mb-2">Legal Acknowledgement</h4>
                   <p className="text-xs text-[#555555] leading-relaxed">
-                    By submitting, I confirm these details are accurate. I understand Forward Legal lawyers will use this to prepare my Will under Singapore law, which must be signed in the presence of two witnesses.
+                    By submitting, I confirm these details are accurate. I understand Forward Legal lawyers will use this to prepare my Will under Singapore law.
                   </p>
                 </div>
               </div>
