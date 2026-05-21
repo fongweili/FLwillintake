@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A professional lawyer engine for generating a first draft of a legal Will based on Singapore standards.
+ * @fileOverview A professional lawyer engine for generating a first draft of a legal Will.
  */
 
 import {ai} from '@/ai/genkit';
@@ -10,7 +10,7 @@ import {z} from 'genkit';
 const WillIntakeInputSchema = z.object({
   clientName: z.string().describe('The full legal name of the testator.'),
   nric: z.string().describe('The NRIC or Passport number of the testator.'),
-  clientAddress: z.string().describe('The full residential address of the testator in Singapore.'),
+  clientAddress: z.string().describe('The full residential address of the testator.'),
   maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed']).describe('The current marital status.'),
   spouseName: z.string().optional(),
   spouseNric: z.string().optional(),
@@ -61,8 +61,8 @@ const willDraftPrompt = ai.definePrompt({
   name: 'willDraftPrompt',
   input: { schema: WillIntakeInputSchema },
   output: { schema: WillDraftOutputSchema },
-  prompt: `You are an expert Singapore lawyer at FORWARD LEGAL. 
-Draft a professional "Last Will and Testament" in accordance with the Wills Act (Cap. 352) of Singapore.
+  prompt: `You are an expert lawyer at FORWARD LEGAL. 
+Draft a professional "Last Will and Testament".
 
 Use the following data:
 Testator: {{{clientName}}} (NRIC: {{{nric}}})
@@ -90,7 +90,7 @@ Specific Gifts:
 - Gift: {{{this.item}}} to {{{this.beneficiaryName}}} ({{{this.beneficiaryNric}}})
 {{/each}}
 
-Residue:
+Residue (everything else):
 {{#each residuaryDistribution}}
 - {{{this.name}}} ({{{this.nric}}}): {{{this.percentage}}}
 {{/each}}
@@ -102,7 +102,7 @@ STRUCTURE:
 4. Specific Legacies.
 5. Distribution of Residuary Estate.
 6. Funeral Wishes (if applicable).
-7. Execution Clause (Singapore Standard).
+7. Execution Clause.
 
 Provide a polished, legally robust draft for review.`,
 });
