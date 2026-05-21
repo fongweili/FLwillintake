@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,8 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateFirstWillDraft, type WillIntakeInput } from '@/ai/flows/generate-first-will-draft';
-import { Scale, ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2 } from 'lucide-react';
+import { Scale, ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, CalendarIcon, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function IntakePage() {
   const router = useRouter();
@@ -47,6 +52,15 @@ export default function IntakePage() {
     setFormData({ ...formData, executors: newExecs });
   };
 
+  const selectChildAsBeneficiary = (index: number, childIndex: number) => {
+    const child = formData.children?.[childIndex];
+    if (!child) return;
+    
+    const d = [...formData.residuaryDistribution];
+    d[index] = { ...d[index], name: child.name, nric: child.nric };
+    setFormData({ ...formData, residuaryDistribution: d });
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -62,15 +76,15 @@ export default function IntakePage() {
 
   const LegalNote = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <button className="inline-flex items-center ml-1 text-accent hover:text-accent/80">
-            <Info className="h-3 w-3" />
+          <button type="button" className="inline-flex items-center ml-1 text-accent hover:text-accent/80 transition-colors">
+            <Info className="h-3.5 w-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent className="max-w-xs bg-primary text-white p-3">
-          <p className="font-bold mb-1">{title}</p>
-          <div className="text-xs leading-relaxed">{children}</div>
+        <TooltipContent className="max-w-xs bg-primary text-white p-4 shadow-xl border-none">
+          <p className="font-bold mb-1 text-sm border-b border-white/20 pb-1">{title}</p>
+          <div className="text-xs leading-relaxed opacity-90">{children}</div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -83,8 +97,8 @@ export default function IntakePage() {
           <div className="flex items-center gap-3">
             <Scale className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="text-xl font-headline text-primary leading-none">FORWARD LEGAL</h2>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Will Intake Portal</p>
+              <h2 className="text-xl font-headline text-primary leading-none uppercase">FORWARD LEGAL</h2>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Will Intake Portal</p>
             </div>
           </div>
           <div className="text-right">
@@ -93,7 +107,7 @@ export default function IntakePage() {
           </div>
         </div>
 
-        <Card className="shadow-2xl border-none overflow-hidden">
+        <Card className="shadow-2xl border-none overflow-hidden bg-white">
           <div className="bg-primary h-2" />
           <CardHeader className="pb-8">
             <CardTitle className="text-2xl font-headline">
@@ -115,14 +129,14 @@ export default function IntakePage() {
             {step === 1 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Full Name (as per NRIC/Passport) <LegalNote title="Testator">The Testator is the person making the Will.</LegalNote></Label>
+                  <Label>Full Name (as per NRIC/Passport) <LegalNote title="Testator">The person who makes the Will. They must be over 21 and of sound mind.</LegalNote></Label>
                   <Input 
                     value={formData.clientName} 
                     onChange={(e) => setFormData({...formData, clientName: e.target.value})} 
                     placeholder="Enter your full legal name" 
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>NRIC / Passport No.</Label>
                     <Input 
@@ -137,7 +151,7 @@ export default function IntakePage() {
                   <Textarea 
                     value={formData.clientAddress} 
                     onChange={(e) => setFormData({...formData, clientAddress: e.target.value})} 
-                    placeholder="Enter your full address" 
+                    placeholder="Enter your full Singapore address" 
                   />
                 </div>
               </div>
@@ -179,27 +193,74 @@ export default function IntakePage() {
                   </div>
                 )}
                 <div className="space-y-4 pt-4 border-t">
-                  <Label>Children <LegalNote title="Guardianship">If your children are under 21, you must appoint a Guardian in the next step.</LegalNote></Label>
-                  <Button variant="outline" size="sm" onClick={() => setFormData({...formData, children: [...(formData.children || []), { name: '', nric: '', dob: '' }]})}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Child
-                  </Button>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-lg">Children <LegalNote title="Guardianship">If your children are under 21, you must appoint a Guardian in the next step to care for them.</LegalNote></Label>
+                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, children: [...(formData.children || []), { name: '', nric: '', dob: '' }]})}>
+                      <Plus className="h-4 w-4 mr-2" /> Add Child
+                    </Button>
+                  </div>
                   {(formData.children || []).map((child, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg relative">
-                      <Input placeholder="Name" value={child.name} onChange={(e) => {
-                        const kids = [...(formData.children || [])];
-                        kids[i].name = e.target.value;
-                        setFormData({...formData, children: kids});
-                      }} />
-                      <Input placeholder="NRIC" value={child.nric} onChange={(e) => {
-                        const kids = [...(formData.children || [])];
-                        kids[i].nric = e.target.value;
-                        setFormData({...formData, children: kids});
-                      }} />
-                      <Input placeholder="DOB (YYYY-MM-DD)" value={child.dob} onChange={(e) => {
-                        const kids = [...(formData.children || [])];
-                        kids[i].dob = e.target.value;
-                        setFormData({...formData, children: kids});
-                      }} />
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg relative">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground uppercase">Name</Label>
+                        <Input placeholder="Full Name" value={child.name} onChange={(e) => {
+                          const kids = [...(formData.children || [])];
+                          kids[i].name = e.target.value;
+                          setFormData({...formData, children: kids});
+                        }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground uppercase">NRIC</Label>
+                        <Input placeholder="NRIC" value={child.nric} onChange={(e) => {
+                          const kids = [...(formData.children || [])];
+                          kids[i].nric = e.target.value;
+                          setFormData({...formData, children: kids});
+                        }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground uppercase">Date of Birth</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal bg-white",
+                                !child.dob && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {child.dob ? format(new Date(child.dob), "PPP") : <span>Select date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={child.dob ? new Date(child.dob) : undefined}
+                              onSelect={(date) => {
+                                const kids = [...(formData.children || [])];
+                                kids[i].dob = date ? date.toISOString() : '';
+                                setFormData({...formData, children: kids});
+                              }}
+                              initialFocus
+                              captionLayout="dropdown-buttons"
+                              fromYear={1900}
+                              toYear={new Date().getFullYear()}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white shadow-sm border text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          const kids = [...(formData.children || [])];
+                          kids.splice(i, 1);
+                          setFormData({...formData, children: kids});
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -210,7 +271,7 @@ export default function IntakePage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <Label className="text-lg">Executors & Trustees <LegalNote title="Executor/Trustee">An Executor carries out your instructions. A Trustee manages assets held for beneficiaries (e.g. for children under 21).</LegalNote></Label>
+                    <Label className="text-lg">Executors & Trustees <LegalNote title="Executor/Trustee">Executors handle the administration of your estate. Trustees manage assets held for beneficiaries over time.</LegalNote></Label>
                     <Button variant="outline" size="sm" onClick={addExecutor}>
                       <Plus className="h-4 w-4 mr-2" /> Add Substitute
                     </Button>
@@ -250,45 +311,75 @@ export default function IntakePage() {
             {step === 4 && (
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <Label className="text-lg">Residuary Estate <LegalNote title="Residue">Everything remaining after debts, taxes, and specific gifts are paid. Most people leave 100% to their spouse or children.</LegalNote></Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-lg">Residuary Estate <LegalNote title="Residue">The "rest" of your estate after paying debts and specific gifts. This is usually the main part of your Will.</LegalNote></Label>
+                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
+                      <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
+                    </Button>
+                  </div>
                   {formData.residuaryDistribution.map((dist, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-3 items-end">
-                      <div className="col-span-1">
-                        <Label className="text-[10px] mb-1 block">Beneficiary Name</Label>
-                        <Input value={dist.name} onChange={(e) => {
-                          const d = [...formData.residuaryDistribution];
-                          d[i].name = e.target.value;
-                          setFormData({...formData, residuaryDistribution: d});
-                        }} />
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-lg relative">
+                      <div className="md:col-span-5 space-y-2">
+                        <Label className="text-[10px] uppercase block">Beneficiary Name</Label>
+                        <div className="flex gap-2">
+                          <Input className="flex-1" value={dist.name} onChange={(e) => {
+                            const d = [...formData.residuaryDistribution];
+                            d[i].name = e.target.value;
+                            setFormData({...formData, residuaryDistribution: d});
+                          }} />
+                          {formData.children && formData.children.length > 0 && (
+                            <Select onValueChange={(val) => selectChildAsBeneficiary(i, parseInt(val))}>
+                              <SelectTrigger className="w-10 px-2" title="Select from children">
+                                <Users className="h-4 w-4" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {formData.children.map((c, idx) => (
+                                  <SelectItem key={idx} value={idx.toString()}>{c.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
                       </div>
-                      <div className="col-span-1">
-                        <Label className="text-[10px] mb-1 block">NRIC</Label>
+                      <div className="md:col-span-4 space-y-2">
+                        <Label className="text-[10px] uppercase block">NRIC</Label>
                         <Input value={dist.nric} onChange={(e) => {
                           const d = [...formData.residuaryDistribution];
                           d[i].nric = e.target.value;
                           setFormData({...formData, residuaryDistribution: d});
                         }} />
                       </div>
-                      <div className="col-span-1">
-                        <Label className="text-[10px] mb-1 block">Share (%)</Label>
+                      <div className="md:col-span-3 space-y-2">
+                        <Label className="text-[10px] uppercase block">Share (%)</Label>
                         <Input value={dist.percentage} onChange={(e) => {
                           const d = [...formData.residuaryDistribution];
                           d[i].percentage = e.target.value;
                           setFormData({...formData, residuaryDistribution: d});
                         }} />
                       </div>
+                      {i > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute -right-2 -top-2 h-6 w-6 bg-white border rounded-full hover:text-destructive"
+                          onClick={() => {
+                            const d = [...formData.residuaryDistribution];
+                            d.splice(i, 1);
+                            setFormData({...formData, residuaryDistribution: d});
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   ))}
-                  <Button variant="ghost" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
-                  </Button>
                 </div>
 
                 <div className="space-y-4 pt-4 border-t">
-                  <Label className="text-lg">Specific Bequests <LegalNote title="Bequests">Gifts of specific items (e.g. 'my Rolex watch' or 'my property at 123 Orchard Rd').</LegalNote></Label>
+                  <Label className="text-lg">Specific Bequests <LegalNote title="Specific Legacy">A gift of a specific item, such as a named property, piece of jewelry, or a specific sum of money.</LegalNote></Label>
                   {(formData.specificBequests || []).map((b, i) => (
-                    <div key={i} className="p-4 bg-muted/20 rounded-lg space-y-3">
-                      <Input placeholder="Description of Gift" value={b.item} onChange={(e) => {
+                    <div key={i} className="p-4 bg-muted/20 rounded-lg space-y-3 relative">
+                      <Input placeholder="Description (e.g. My HDB Flat, Rolex Watch)" value={b.item} onChange={(e) => {
                         const bq = [...(formData.specificBequests || [])];
                         bq[i].item = e.target.value;
                         setFormData({...formData, specificBequests: bq});
@@ -305,6 +396,13 @@ export default function IntakePage() {
                           setFormData({...formData, specificBequests: bq});
                         }} />
                       </div>
+                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => {
+                         const bq = [...(formData.specificBequests || [])];
+                         bq.splice(i, 1);
+                         setFormData({...formData, specificBequests: bq});
+                      }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                   <Button variant="outline" size="sm" onClick={() => setFormData({...formData, specificBequests: [...(formData.specificBequests || []), { item: '', beneficiaryName: '', beneficiaryNric: '' }]})}>
@@ -317,20 +415,22 @@ export default function IntakePage() {
             {step === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Funeral Wishes <LegalNote title="Optional">These instructions are generally not legally binding but serve as a guide for your family.</LegalNote></Label>
+                  <Label>Funeral Wishes <LegalNote title="Optional Instructions">Wishes about burial, cremation, or rites. While usually not binding, they provide peace of mind to your family.</LegalNote></Label>
                   <Textarea 
                     value={formData.funeralWishes || ''} 
                     onChange={(e) => setFormData({...formData, funeralWishes: e.target.value})} 
-                    placeholder="e.g. Burial at CCK, Cremation at Mandai, specific religious rites..." 
+                    placeholder="e.g. Cremation at Mandai, specific religious rites at CCK..." 
                     rows={4}
                   />
                 </div>
                 <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
-                  <h4 className="font-bold text-primary mb-2">Acknowledgement</h4>
+                  <h4 className="font-bold text-primary mb-2 flex items-center gap-2">
+                    <Scale className="h-4 w-4" /> Legal Acknowledgement
+                  </h4>
                   <p className="text-xs text-primary/80 leading-relaxed">
-                    By submitting this questionnaire, I confirm that the information provided is accurate. 
-                    I understand that this digital intake will be used by **Forward Legal** to generate a first draft of my Last Will and Testament, 
-                    which will then be reviewed and finalized by a qualified solicitor.
+                    By submitting this digital questionnaire, I confirm that the details provided are accurate. 
+                    I understand this information will be used by **FORWARD LEGAL** to draft my Last Will and Testament 
+                    under the Singapore Wills Act, which will be vetted by a solicitor.
                   </p>
                 </div>
               </div>
@@ -359,7 +459,7 @@ export default function IntakePage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Drafting Case...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Drafting Will...</>
                   ) : (
                     "Submit to Solicitor"
                   )}
