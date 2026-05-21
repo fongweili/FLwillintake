@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-legal",
+      "description": "Professional legal office setting",
+      "imageUrl": "https://picsum.photos/seed/legal1/1200/800",
+      "imageHint": "legal office"
+    },
+    {
+      "id": "signature-pad",
+      "description": "Digital signature concept",
+      "imageUrl": "https://picsum.photos/seed/sign/600/400",
+      "imageHint": "digital signature"
+    }
+  ]
+}
