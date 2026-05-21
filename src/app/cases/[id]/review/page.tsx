@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { refineWillDraftWithAI } from '@/ai/flows/refine-will-draft-with-ai';
-import { Scale, ArrowLeft, Send, Sparkles, CheckCircle, Loader2, Save } from 'lucide-react';
+import { Scale, ArrowLeft, Send, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -21,14 +20,12 @@ export default function ReviewPage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // Attempt to load the draft data
     const lastDraft = localStorage.getItem('last_draft_data');
     if (lastDraft) {
       const parsed = JSON.parse(lastDraft);
       setDraft(parsed.draft);
       setInputData(parsed.input);
     } else {
-      // Dummy data fallback
       setDraft("LAST WILL AND TESTAMENT\n\nI, Alice Johnson, residing at 456 Oak St, specify my distribution...");
     }
   }, []);
@@ -53,7 +50,6 @@ export default function ReviewPage() {
   };
 
   const handleFinalize = () => {
-    // In a real app, save the final version to the vault
     localStorage.setItem('vetted_document', draft);
     router.push('/dashboard');
   };
@@ -68,14 +64,11 @@ export default function ReviewPage() {
             </Button>
             <div className="flex items-center gap-2">
               <Scale className="h-6 w-6 text-primary" />
-              <h1 className="font-headline text-lg">Case Review: {inputData?.clientName || 'Loading...'}</h1>
+              <h1 className="font-headline text-lg">Lawyer Review: {inputData?.clientName || 'Loading...'}</h1>
             </div>
             <Badge variant="outline" className="ml-2">Draft Version 1.2</Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => router.push('/monitoring')}>
-              View Logic Flow
-            </Button>
             <Button className="bg-primary text-white" onClick={handleFinalize}>
               <CheckCircle className="mr-2 h-4 w-4" /> Finalize & Send
             </Button>
@@ -84,7 +77,6 @@ export default function ReviewPage() {
       </header>
 
       <div className="container mx-auto p-6 flex flex-col lg:flex-row gap-6">
-        {/* Left: Intake Data (Context) */}
         <div className="lg:w-1/3 space-y-6">
           <Card className="h-[calc(100vh-140px)] overflow-auto bg-white border-none shadow-md">
             <CardHeader className="border-b bg-muted/20">
@@ -107,19 +99,15 @@ export default function ReviewPage() {
                   </section>
                   <section>
                     <h3 className="text-xs font-bold text-primary mb-2">EXECUTOR</h3>
-                    <div className="text-sm"><span className="text-muted-foreground">Primary:</span> {inputData.executorName} ({inputData.executorRelationship})</div>
+                    <div className="text-sm"><span className="text-muted-foreground">Primary:</span> {inputData.executors[0]?.name} ({inputData.executors[0]?.relationship})</div>
                   </section>
                   <section>
                     <h3 className="text-xs font-bold text-primary mb-2">BENEFICIARIES</h3>
-                    {inputData.beneficiaries.map((b: any, i: number) => (
+                    {inputData.residuaryDistribution.map((b: any, i: number) => (
                       <div key={i} className="text-sm mb-1">
-                        <span className="text-muted-foreground">{b.name}:</span> {b.share}
+                        <span className="text-muted-foreground">{b.name}:</span> {b.percentage}
                       </div>
                     ))}
-                  </section>
-                  <section>
-                    <h3 className="text-xs font-bold text-primary mb-2">PROVISIONS</h3>
-                    <p className="text-sm italic text-muted-foreground">{inputData.additionalProvisions || 'None provided'}</p>
                   </section>
                 </>
               ) : (
@@ -131,12 +119,11 @@ export default function ReviewPage() {
           </Card>
         </div>
 
-        {/* Right: AI Editor & Draft */}
         <div className="lg:w-2/3 flex flex-col gap-6">
           <div className="flex-1 flex flex-col gap-6">
-            <Card className="flex-1 overflow-auto document-column border-none shadow-xl bg-white relative">
+            <Card className="flex-1 overflow-auto document-column border-none shadow-xl bg-white relative min-h-[500px]">
               <div className="absolute top-4 right-4 z-10">
-                {isSuccess && <Badge className="bg-green-500 text-white animate-bounce">Update Applied!</Badge>}
+                {isSuccess && <Badge className="bg-green-500 text-white animate-bounce">Draft Refined</Badge>}
               </div>
               <CardContent className="p-12 whitespace-pre-wrap font-body text-[16px] leading-relaxed text-primary/80">
                 {draft}
@@ -146,13 +133,13 @@ export default function ReviewPage() {
             <Card className="border-accent/20 border bg-accent/5">
               <CardHeader className="py-4">
                 <CardTitle className="text-sm flex items-center gap-2 text-accent font-headline">
-                  <Sparkles className="h-4 w-4" /> AI Refinement Tool
+                  <Sparkles className="h-4 w-4" /> Lawyer Refinement Tool
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
                 <div className="flex gap-2">
                   <Textarea 
-                    placeholder="Enter amendments (e.g., 'Change the executor name' or 'Add a clause about trust distribution for minors')..."
+                    placeholder="Describe the amendments required for this draft..."
                     className="flex-1 bg-white"
                     value={amendments}
                     onChange={(e) => setAmendments(e.target.value)}
@@ -166,7 +153,7 @@ export default function ReviewPage() {
                   </Button>
                 </div>
                 <p className="text-[10px] text-accent/70 mt-2">
-                  AI will precisely interpret your instructions to update the draft above while maintaining legal formatting.
+                  Use this tool to precisely update the draft based on lawyer instructions.
                 </p>
               </CardContent>
             </Card>

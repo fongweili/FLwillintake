@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,14 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { generateFirstWillDraft, type WillIntakeInput } from '@/ai/flows/generate-first-will-draft';
 import { Logo } from '@/components/logo';
-import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, CalendarIcon, Users, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2 } from 'lucide-react';
 
 export default function IntakePage() {
   const router = useRouter();
@@ -43,10 +40,45 @@ export default function IntakePage() {
   const nextStep = () => setStep(s => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
+  const handleSmartDate = (value: string, index: number) => {
+    const kids = [...(formData.children || [])];
+    kids[index].dob = value;
+    
+    // Attempt smart parsing on blur or specific triggers could go here, 
+    // but for immediate feedback we keep the text and try to format if it looks like a date
+    setFormData({...formData, children: kids});
+  };
+
+  const finalizeDate = (index: number) => {
+    const kids = [...(formData.children || [])];
+    const val = kids[index].dob;
+    if (!val) return;
+
+    // Try standard Date parsing
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      kids[index].dob = format(d, 'dd-MM-yyyy');
+      setFormData({...formData, children: kids});
+      return;
+    }
+
+    // Try common Singapore formats if standard fails
+    const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'dd.MM.yyyy', 'yyyy-MM-dd'];
+    for (const f of formats) {
+      try {
+        const parsed = parse(val, f, new Date());
+        if (!isNaN(parsed.getTime())) {
+          kids[index].dob = format(parsed, 'dd-MM-yyyy');
+          setFormData({...formData, children: kids});
+          break;
+        }
+      } catch (e) {}
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Logic remains to create the initial document state, but UI reflects "Forwarding"
       const draft = await generateFirstWillDraft(formData);
       localStorage.setItem('last_draft_data', JSON.stringify({ input: formData, draft }));
       router.push('/dashboard');
@@ -110,8 +142,8 @@ export default function IntakePage() {
                   <h3 className="font-bold text-primary flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5" /> A Warm Welcome from Forward Legal
                   </h3>
-                  <p className="text-sm text-[#555555] leading-relaxed">
-                    We are honored to assist you with your estate planning. This questionnaire is designed to capture all necessary details to prepare a robust Will under the <strong>Singapore Wills Act</strong>. 
+                  <p className="text-sm text-[#555555] font-medium leading-relaxed">
+                    We are honored to assist you with your estate planning. This questionnaire captures all necessary details for our lawyers to prepare a robust Will under the <strong>Singapore Wills Act</strong>. 
                   </p>
                   <ul className="text-xs text-[#666666] space-y-1 list-disc pl-4">
                     <li>Your data is encrypted and kept strictly confidential.</li>
@@ -199,19 +231,15 @@ export default function IntakePage() {
                         kids[i].nric = e.target.value;
                         setFormData({...formData, children: kids});
                       }} />
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left bg-white">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {child.dob ? format(new Date(child.dob), "PPP") : "DOB"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={child.dob ? new Date(child.dob) : undefined} onSelect={(d) => {
-                          const kids = [...(formData.children || [])];
-                          kids[i].dob = d ? d.toISOString() : '';
-                          setFormData({...formData, children: kids});
-                        }} initialFocus /></PopoverContent>
-                      </Popover>
+                      <div className="space-y-1">
+                        <Input 
+                          placeholder="DOB (e.g. 12 Jan 1990)" 
+                          value={child.dob} 
+                          onChange={(e) => handleSmartDate(e.target.value, i)}
+                          onBlur={() => finalizeDate(i)}
+                        />
+                        <p className="text-[10px] text-muted-foreground px-1">Smart format: DD-MM-YYYY</p>
+                      </div>
                       <Button variant="ghost" size="icon" className="absolute -right-2 -top-2" onClick={() => {
                         const kids = [...(formData.children || [])];
                         kids.splice(i, 1);
@@ -382,7 +410,7 @@ export default function IntakePage() {
                 </Button>
               ) : (
                 <Button className="bg-primary hover:bg-primary/90 text-white min-w-[200px]" onClick={handleSubmit} disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting to Lawyers...</> : "Submit to Forward Legal"}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Transmitting to Lawyers...</> : "Submit to Forward Legal"}
                 </Button>
               )}
             </div>

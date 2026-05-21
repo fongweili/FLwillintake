@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A Genkit flow for generating a first draft of a legal Will based on Forward Legal Singapore standards.
+ * @fileOverview A professional lawyer engine for generating a first draft of a legal Will based on Singapore standards.
  */
 
 import {ai} from '@/ai/genkit';
@@ -61,7 +61,7 @@ const willDraftPrompt = ai.definePrompt({
   name: 'willDraftPrompt',
   input: { schema: WillIntakeInputSchema },
   output: { schema: WillDraftOutputSchema },
-  prompt: `You are an expert Singapore solicitor at FORWARD LEGAL. 
+  prompt: `You are an expert Singapore lawyer at FORWARD LEGAL. 
 Draft a professional "Last Will and Testament" in accordance with the Wills Act (Cap. 352) of Singapore.
 
 Use the following data:
@@ -104,7 +104,7 @@ STRUCTURE:
 6. Funeral Wishes (if applicable).
 7. Execution Clause (Singapore Standard).
 
-Provide a polished, legally robust draft for review by a Forward Legal partner.`,
+Provide a polished, legally robust draft for review.`,
 });
 
 const willDraftFlow = ai.defineFlow(
