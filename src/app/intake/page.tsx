@@ -54,6 +54,7 @@ export default function IntakePage() {
     const val = kids[index].dob;
     if (!val) return;
 
+    // Try parsing common formats
     const d = new Date(val);
     if (!isNaN(d.getTime())) {
       kids[index].dob = format(d, 'dd-MM-yyyy');
@@ -103,6 +104,7 @@ export default function IntakePage() {
     </TooltipProvider>
   );
 
+  // Helper to get all family members entered so far
   const familyMembers = [
     ...(formData.spouseName ? [{ name: formData.spouseName, nric: formData.spouseNric || '', relationship: 'Spouse' }] : []),
     ...(formData.children || []).map(c => ({ name: c.name, nric: c.nric, relationship: 'Child' }))
@@ -127,11 +129,11 @@ export default function IntakePage() {
           <div className="bg-primary h-2" />
           <CardHeader className="pb-8">
             <CardTitle className="text-2xl font-headline text-[#555555]">
-              {step === 1 && "welcome and identification"}
-              {step === 2 && "family and dependents"}
-              {step === 3 && "appointments"}
-              {step === 4 && "distribution of assets"}
-              {step === 5 && "final instructions"}
+              {step === 1 && "Welcome and Identification"}
+              {step === 2 && "Family and Dependents"}
+              {step === 3 && "Appointments"}
+              {step === 4 && "Distribution of Assets"}
+              {step === 5 && "Final Instructions"}
             </CardTitle>
             <CardDescription className="text-sm">
               {step === 1 && "Let's begin with your personal details for your legal will."}
@@ -161,16 +163,16 @@ export default function IntakePage() {
 
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label>full name (as per nric/passport) <LegalNote title="testator">the person who makes the will. ensure the name matches your nric exactly to avoid probate delays later.</LegalNote></Label>
+                    <Label>Full Name (as per NRIC/Passport) <LegalNote title="Testator">The person who makes the will. Ensure the name matches your NRIC exactly to avoid probate delays later.</LegalNote></Label>
                     <Input 
                       value={formData.clientName} 
                       onChange={(e) => setFormData({...formData, clientName: e.target.value})} 
-                      placeholder="enter your full legal name" 
+                      placeholder="Enter your full legal name" 
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>nric / passport no.</Label>
+                      <Label>NRIC / Passport No.</Label>
                       <Input 
                         value={formData.nric} 
                         onChange={(e) => setFormData({...formData, nric: e.target.value})} 
@@ -179,11 +181,11 @@ export default function IntakePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>residential address</Label>
+                    <Label>Residential Address</Label>
                     <Textarea 
                       value={formData.clientAddress} 
                       onChange={(e) => setFormData({...formData, clientAddress: e.target.value})} 
-                      placeholder="full residential address" 
+                      placeholder="Full residential address" 
                     />
                   </div>
                 </div>
@@ -193,7 +195,7 @@ export default function IntakePage() {
             {step === 2 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label>marital status</Label>
+                  <Label>Marital Status</Label>
                   <RadioGroup 
                     value={formData.maritalStatus} 
                     onValueChange={(val) => setFormData({...formData, maritalStatus: val as any})}
@@ -210,42 +212,42 @@ export default function IntakePage() {
                 {formData.maritalStatus === 'Married' && (
                   <div className="grid grid-cols-2 gap-4 animate-in fade-in">
                     <div className="space-y-2">
-                      <Label>spouse name</Label>
+                      <Label>Spouse Name</Label>
                       <Input value={formData.spouseName || ''} onChange={(e) => setFormData({...formData, spouseName: e.target.value})} />
                     </div>
                     <div className="space-y-2">
-                      <Label>spouse nric</Label>
+                      <Label>Spouse NRIC</Label>
                       <Input value={formData.spouseNric || ''} onChange={(e) => setFormData({...formData, spouseNric: e.target.value})} />
                     </div>
                   </div>
                 )}
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex justify-between items-center">
-                    <Label className="text-lg">children</Label>
+                    <Label className="text-lg">Children</Label>
                     <Button variant="outline" size="sm" onClick={() => setFormData({...formData, children: [...(formData.children || []), { name: '', nric: '', dob: '' }]})}>
-                      <Plus className="h-4 w-4 mr-2" /> add child
+                      <Plus className="h-4 w-4 mr-2" /> Add Child
                     </Button>
                   </div>
                   {(formData.children || []).map((child, i) => (
                     <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg relative">
-                      <Input placeholder="full name" value={child.name} onChange={(e) => {
+                      <Input placeholder="Full Name" value={child.name} onChange={(e) => {
                         const kids = [...(formData.children || [])];
                         kids[i].name = e.target.value;
                         setFormData({...formData, children: kids});
                       }} />
-                      <Input placeholder="nric" value={child.nric} onChange={(e) => {
+                      <Input placeholder="NRIC" value={child.nric} onChange={(e) => {
                         const kids = [...(formData.children || [])];
                         kids[i].nric = e.target.value;
                         setFormData({...formData, children: kids});
                       }} />
                       <div className="space-y-1">
                         <Input 
-                          placeholder="dob (e.g. 12 jan 1990)" 
+                          placeholder="DOB (e.g. 12 Jan 1990)" 
                           value={child.dob} 
                           onChange={(e) => handleSmartDate(e.target.value, i)}
                           onBlur={() => finalizeDate(i)}
                         />
-                        <p className="text-[10px] text-muted-foreground px-1">smart format: dd-mm-yyyy</p>
+                        <p className="text-[10px] text-muted-foreground px-1">Smart format: DD-MM-YYYY</p>
                       </div>
                       <Button variant="ghost" size="icon" className="absolute -right-2 -top-2" onClick={() => {
                         const kids = [...(formData.children || [])];
@@ -262,12 +264,12 @@ export default function IntakePage() {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <Label className="text-lg">executors <LegalNote title="executor selection">
-                      <p><strong>Definition:</strong> the person who gathers your assets, pays your debts, and distributes your estate after death.</p>
-                      <p><strong>Tips:</strong> choose someone you trust implicitly, who is likely to survive you. Most people choose their spouse or adult children.</p>
+                    <Label className="text-lg">Executors <LegalNote title="Executor Selection">
+                      <p><strong>Definition:</strong> The person who gathers your assets, pays your debts, and distributes your estate after death.</p>
+                      <p><strong>Tips:</strong> Choose someone you trust implicitly, who is likely to survive you. Most people choose their spouse or adult children.</p>
                     </LegalNote></Label>
                     <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: false }]})}>
-                      <Plus className="h-4 w-4 mr-2" /> add substitute
+                      <Plus className="h-4 w-4 mr-2" /> Add Substitute
                     </Button>
                   </div>
                   {formData.executors.map((exec, i) => (
@@ -281,12 +283,12 @@ export default function IntakePage() {
                         }} />}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        <Input placeholder="full name" value={exec.name} onChange={(e) => {
+                        <Input placeholder="Full Name" value={exec.name} onChange={(e) => {
                           const ex = [...formData.executors];
                           ex[i].name = e.target.value;
                           setFormData({...formData, executors: ex});
                         }} />
-                        <Input placeholder="nric" value={exec.nric} onChange={(e) => {
+                        <Input placeholder="NRIC" value={exec.nric} onChange={(e) => {
                           const ex = [...formData.executors];
                           ex[i].nric = e.target.value;
                           setFormData({...formData, executors: ex});
@@ -298,10 +300,10 @@ export default function IntakePage() {
 
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
-                    <Label className="text-lg">trustees <LegalNote title="trustee vs executor">
-                      <p><strong>Executor:</strong> handles administrative tasks (debts, legal paperwork).</p>
-                      <p><strong>Trustee:</strong> manages assets for long-term (e.g., holding money for children until they reach 21).</p>
-                      <p><strong>Tip:</strong> usually, the executor and trustee are the <strong>same person</strong>.</p>
+                    <Label className="text-lg">Trustees <LegalNote title="Trustee vs Executor">
+                      <p><strong>Executor:</strong> Handles administrative tasks (debts, legal paperwork).</p>
+                      <p><strong>Trustee:</strong> Manages assets for long-term (e.g., holding money for children until they reach 21).</p>
+                      <p><strong>Tip:</strong> Usually, the executor and trustee are the <strong>same person</strong>.</p>
                     </LegalNote></Label>
                     <div className="flex items-center space-x-2">
                       <Switch checked={appointDifferentTrustees} onCheckedChange={setAppointDifferentTrustees} />
@@ -317,12 +319,12 @@ export default function IntakePage() {
 
                 {(formData.children || []).length > 0 && (
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-lg">guardian <LegalNote title="legal guardian">
+                    <Label className="text-lg">Guardian <LegalNote title="Legal Guardian">
                       <p>The person responsible for raising minor children if both parents pass away before they reach 21.</p>
                     </LegalNote></Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input placeholder="guardian name" value={formData.guardianName || ''} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} />
-                      <Input placeholder="guardian nric" value={formData.guardianNric || ''} onChange={(e) => setFormData({...formData, guardianNric: e.target.value})} />
+                      <Input placeholder="Guardian Name" value={formData.guardianName || ''} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} />
+                      <Input placeholder="Guardian NRIC" value={formData.guardianNric || ''} onChange={(e) => setFormData({...formData, guardianNric: e.target.value})} />
                     </div>
                   </div>
                 )}
@@ -332,7 +334,7 @@ export default function IntakePage() {
             {step === 4 && (
               <div className="space-y-8 animate-in slide-in-from-right duration-300">
                 <div className="bg-primary/5 p-6 rounded-xl border border-primary/20 mb-6">
-                  <h3 className="font-bold text-primary mb-2">how would you like to distribute your assets?</h3>
+                  <h3 className="font-bold text-primary mb-2">How would you like to distribute your assets?</h3>
                   <p className="text-xs text-[#555555] leading-relaxed mb-4">
                     Choose the distribution strategy that best fits your needs. Our lawyers will refine the details based on your selection.
                   </p>
@@ -343,8 +345,8 @@ export default function IntakePage() {
                     >
                       <RadioGroupItem value="percentage" id="perc" className="sr-only" />
                       <Percent className={`h-8 w-8 ${distributionStrategy === 'percentage' ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <span className="font-bold text-center">simple percentage split</span>
-                      <span className="text-[10px] text-center text-muted-foreground">distribute everything by percentages among all beneficiaries.</span>
+                      <span className="font-bold text-center">Simple Percentage Split</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Distribute everything by percentages among all beneficiaries.</span>
                     </Label>
 
                     <Label 
@@ -353,8 +355,8 @@ export default function IntakePage() {
                     >
                       <RadioGroupItem value="specific" id="spec" className="sr-only" />
                       <Gift className={`h-8 w-8 ${distributionStrategy === 'specific' ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <span className="font-bold text-center">specific gifts</span>
-                      <span className="text-[10px] text-center text-muted-foreground">assign specific items to specific people.</span>
+                      <span className="font-bold text-center">Specific Gifts</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Assign specific items to specific people.</span>
                     </Label>
 
                     <Label 
@@ -363,8 +365,8 @@ export default function IntakePage() {
                     >
                       <RadioGroupItem value="hybrid" id="hyb" className="sr-only" />
                       <Layers className={`h-8 w-8 ${distributionStrategy === 'hybrid' ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <span className="font-bold text-center">hybrid approach</span>
-                      <span className="text-[10px] text-center text-muted-foreground">specific gifts plus a percentage split of the residue.</span>
+                      <span className="font-bold text-center">Hybrid Approach</span>
+                      <span className="text-[10px] text-center text-muted-foreground">Specific gifts plus a percentage split of the residue.</span>
                     </Label>
                   </RadioGroup>
                 </div>
@@ -372,18 +374,18 @@ export default function IntakePage() {
                 {distributionStrategy === 'percentage' && (
                   <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
                     <div className="flex justify-between items-center">
-                      <Label className="text-lg">the residue <LegalNote title="everything else">
-                        <p><strong>Definition:</strong> "the residue" is simply everything you own that has not been given as a specific gift, after debts and taxes are paid.</p>
-                        <p>With this option, your lawyers will include a <strong>schedule of assets</strong> in the will. your executor will identify your assets (bank accounts, property, etc.) and split the total value by these percentages.</p>
+                      <Label className="text-lg">The Residue <LegalNote title="Everything Else">
+                        <p><strong>Definition:</strong> "The Residue" is simply everything you own that has not been given as a specific gift, after debts and taxes are paid.</p>
+                        <p>With this option, your lawyers will include a <strong>Schedule of Assets</strong> in the will. Your executor will identify your assets (bank accounts, property, etc.) and split the total value by these percentages.</p>
                       </LegalNote></Label>
                       <Button variant="outline" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
-                        <Plus className="h-4 w-4 mr-2" /> add beneficiary
+                        <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
                       </Button>
                     </div>
                     {formData.residuaryDistribution.map((dist, i) => (
                       <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-lg">
                         <div className="md:col-span-5 space-y-2">
-                          <Label className="text-[10px] uppercase">name</Label>
+                          <Label className="text-[10px] uppercase">Name</Label>
                           <div className="flex gap-2">
                             <Input className="flex-1" value={dist.name} onChange={(e) => {
                               const d = [...formData.residuaryDistribution];
@@ -399,13 +401,17 @@ export default function IntakePage() {
                                 setFormData({ ...formData, residuaryDistribution: d });
                               }}>
                                 <SelectTrigger className="w-10 px-2"><Users className="h-4 w-4" /></SelectTrigger>
-                                <SelectContent>{familyMembers.map((m, idx) => (<SelectItem key={idx} value={idx.toString()}>{m.name} ({m.relationship})</SelectItem>))}</SelectContent>
+                                <SelectContent>
+                                  {familyMembers.map((m, idx) => (
+                                    <SelectItem key={idx} value={idx.toString()}>{m.name} ({m.relationship})</SelectItem>
+                                  ))}
+                                </SelectContent>
                               </Select>
                             )}
                           </div>
                         </div>
                         <div className="md:col-span-4 space-y-2">
-                          <Label className="text-[10px] uppercase">nric</Label>
+                          <Label className="text-[10px] uppercase">NRIC</Label>
                           <Input value={dist.nric} onChange={(e) => {
                             const d = [...formData.residuaryDistribution];
                             d[i].nric = e.target.value;
@@ -413,7 +419,7 @@ export default function IntakePage() {
                           }} />
                         </div>
                         <div className="md:col-span-3 space-y-2">
-                          <Label className="text-[10px] uppercase">share (%)</Label>
+                          <Label className="text-[10px] uppercase">Share (%)</Label>
                           <div className="flex gap-2">
                             <Input value={dist.percentage} placeholder="e.g. 50%" onChange={(e) => {
                               const d = [...formData.residuaryDistribution];
@@ -435,11 +441,11 @@ export default function IntakePage() {
                 {(distributionStrategy === 'specific' || distributionStrategy === 'hybrid') && (
                   <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
                     <div className="flex justify-between items-center">
-                      <Label className="text-lg">specific gifts <LegalNote title="specific legacies">
+                      <Label className="text-lg">Specific Gifts <LegalNote title="Specific Legacies">
                         <p>Use this to gift specific items (e.g., "My gold watch" or "My property at 123 Orchard Rd") to specific people.</p>
                       </LegalNote></Label>
                       <Button variant="outline" size="sm" onClick={() => setFormData({...formData, specificBequests: [...(formData.specificBequests || []), { item: '', beneficiaryName: '', beneficiaryNric: '' }]})}>
-                        <Plus className="h-4 w-4 mr-2" /> add gift
+                        <Plus className="h-4 w-4 mr-2" /> Add Gift
                       </Button>
                     </div>
                     {(formData.specificBequests || []).map((gift, i) => (
@@ -453,8 +459,8 @@ export default function IntakePage() {
                           }} />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] uppercase">description of asset/item</Label>
-                          <Input placeholder="e.g. jewellery, piano, property address..." value={gift.item} onChange={(e) => {
+                          <Label className="text-[10px] uppercase">Description of Asset/Item</Label>
+                          <Input placeholder="e.g. Jewellery, piano, property address..." value={gift.item} onChange={(e) => {
                             const g = [...(formData.specificBequests || [])];
                             g[i].item = e.target.value;
                             setFormData({...formData, specificBequests: g});
@@ -462,7 +468,7 @@ export default function IntakePage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] uppercase">beneficiary name</Label>
+                            <Label className="text-[10px] uppercase">Beneficiary Name</Label>
                             <div className="flex gap-2">
                               <Input className="flex-1" value={gift.beneficiaryName} onChange={(e) => {
                                 const g = [...(formData.specificBequests || [])];
@@ -478,13 +484,17 @@ export default function IntakePage() {
                                   setFormData({ ...formData, specificBequests: g });
                                 }}>
                                   <SelectTrigger className="w-10 px-2"><User className="h-4 w-4" /></SelectTrigger>
-                                  <SelectContent>{familyMembers.map((m, idx) => (<SelectItem key={idx} value={idx.toString()}>{m.name}</SelectItem>))}</SelectContent>
+                                  <SelectContent>
+                                    {familyMembers.map((m, idx) => (
+                                      <SelectItem key={idx} value={idx.toString()}>{m.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
                                 </Select>
                               )}
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] uppercase">beneficiary nric</Label>
+                            <Label className="text-[10px] uppercase">Beneficiary NRIC</Label>
                             <Input value={gift.beneficiaryNric} onChange={(e) => {
                               const g = [...(formData.specificBequests || [])];
                               g[i].beneficiaryNric = e.target.value;
@@ -499,7 +509,7 @@ export default function IntakePage() {
 
                 {distributionStrategy === 'hybrid' && (
                   <div className="space-y-6 pt-6 border-t animate-in fade-in duration-700">
-                    <Label className="text-lg">the residue <LegalNote title="everything else">
+                    <Label className="text-lg">The Residue <LegalNote title="Everything Else">
                       <p>After giving the specific gifts listed above, how should the <strong>remaining</strong> assets (the residue) be split?</p>
                     </LegalNote></Label>
                     <div className="space-y-4">
@@ -519,7 +529,11 @@ export default function IntakePage() {
                                   setFormData({ ...formData, residuaryDistribution: d });
                                 }}>
                                   <SelectTrigger className="w-10 px-2"><Users className="h-4 w-4" /></SelectTrigger>
-                                  <SelectContent>{familyMembers.map((m, idx) => (<SelectItem key={idx} value={idx.toString()}>{m.name}</SelectItem>))}</SelectContent>
+                                  <SelectContent>
+                                    {familyMembers.map((m, idx) => (
+                                      <SelectItem key={idx} value={idx.toString()}>{m.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
                                 </Select>
                                )}
                              </div>
@@ -538,7 +552,7 @@ export default function IntakePage() {
                         </div>
                       ))}
                       <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
-                        + add residual beneficiary
+                        + Add Residual Beneficiary
                       </Button>
                     </div>
                   </div>
@@ -549,8 +563,8 @@ export default function IntakePage() {
             {step === 5 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>funeral wishes <LegalNote title="optional">funeral wishes provide guidance for your family during a difficult time.</LegalNote></Label>
-                  <Textarea value={formData.funeralWishes || ''} onChange={(e) => setFormData({...formData, funeralWishes: e.target.value})} placeholder="e.g. cremation at Mandai, specific religious rites..." rows={4} />
+                  <Label>Funeral Wishes <LegalNote title="Optional">Funeral wishes provide guidance for your family during a difficult time.</LegalNote></Label>
+                  <Textarea value={formData.funeralWishes || ''} onChange={(e) => setFormData({...formData, funeralWishes: e.target.value})} placeholder="e.g. Cremation at Mandai, specific religious rites..." rows={4} />
                 </div>
                 <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
                   <h4 className="font-bold text-primary mb-2">Legal Acknowledgement</h4>
@@ -563,15 +577,15 @@ export default function IntakePage() {
 
             <div className="flex justify-between pt-10 border-t">
               <Button variant="ghost" onClick={prevStep} disabled={step === 1 || loading}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> back
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               {step < totalSteps ? (
                 <Button className="bg-primary hover:bg-primary/90 text-white min-w-[140px]" onClick={nextStep}>
-                  next step <ArrowRight className="ml-2 h-4 w-4" />
+                  Next Step <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
                 <Button className="bg-primary hover:bg-primary/90 text-white min-w-[200px]" onClick={handleSubmit} disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> transmitting to lawyers...</> : "submit to forward legal"}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Transmitting to Lawyers...</> : "Submit to Forward Legal"}
                 </Button>
               )}
             </div>
