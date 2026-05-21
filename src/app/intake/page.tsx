@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -54,7 +55,7 @@ export default function IntakePage() {
     const val = kids[index].dob;
     if (!val) return;
 
-    const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'dd.MM.yyyy', 'yyyy-MM-dd'];
+    const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'dd.MM.yyyy', 'yyyy-MM-dd', 'd MMM yyyy', 'MMM d yyyy'];
     for (const f of formats) {
       try {
         const parsed = parse(val, f, new Date());
@@ -100,44 +101,6 @@ export default function IntakePage() {
     ...(formData.spouseName ? [{ name: formData.spouseName, nric: formData.spouseNric || '', relationship: 'Spouse' }] : []),
     ...(formData.children || []).map(c => ({ name: c.name, nric: c.nric, relationship: 'Child' }))
   ];
-
-  const addAssetToSchedule = () => {
-    setFormData({
-      ...formData,
-      assetSchedule: [...(formData.assetSchedule || []), { type: 'Bank Account' }]
-    });
-  };
-
-  const removeAssetFromSchedule = (index: number) => {
-    const assets = [...(formData.assetSchedule || [])];
-    assets.splice(index, 1);
-    setFormData({ ...formData, assetSchedule: assets });
-  };
-
-  const updateAssetInSchedule = (index: number, field: string, value: string) => {
-    const assets = [...(formData.assetSchedule || [])];
-    // @ts-ignore
-    assets[index][field] = value;
-    setFormData({ ...formData, assetSchedule: assets });
-  };
-
-  const addSpecificGift = () => {
-    setFormData({
-      ...formData,
-      specificBequests: [...(formData.specificBequests || []), { 
-        item: { type: 'Personal Items' }, 
-        beneficiaryName: '', 
-        beneficiaryNric: '' 
-      }]
-    });
-  };
-
-  const updateSpecificGiftItem = (index: number, field: string, value: string) => {
-    const gifts = [...(formData.specificBequests || [])];
-    // @ts-ignore
-    gifts[index].item[field] = value;
-    setFormData({ ...formData, specificBequests: gifts });
-  };
 
   const AssetFields = ({ asset, onUpdate }: { asset: any, onUpdate: (field: string, val: string) => void }) => {
     return (
@@ -209,10 +172,19 @@ export default function IntakePage() {
   const SpecificGiftsSection = () => (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
-        <Label className="text-lg">Specific Gifts <LegalNote title="Specific Legacies">
-          <p>Gifting specific assets (e.g. "My gold watch") to specific people. These are given out BEFORE the remaining estate is split.</p>
+        <Label className="text-lg font-headline">Specific Gifts <LegalNote title="Specific Legacies">
+          <p>Gifting specific assets (e.g. "My gold watch") to specific people. These are given out BEFORE the remaining assets are split.</p>
         </LegalNote></Label>
-        <Button variant="outline" size="sm" onClick={addSpecificGift}>
+        <Button variant="outline" size="sm" onClick={() => {
+          setFormData({
+            ...formData,
+            specificBequests: [...(formData.specificBequests || []), { 
+              item: { type: 'Personal Items' }, 
+              beneficiaryName: '', 
+              beneficiaryNric: '' 
+            }]
+          });
+        }}>
           <Plus className="h-4 w-4 mr-2" /> Add Gift
         </Button>
       </div>
@@ -229,7 +201,12 @@ export default function IntakePage() {
           
           <div className="space-y-4">
             <h4 className="text-xs font-bold text-primary uppercase border-b pb-1">Asset Details</h4>
-            <AssetFields asset={gift.item} onUpdate={(f, v) => updateSpecificGiftItem(i, f, v)} />
+            <AssetFields asset={gift.item} onUpdate={(f, v) => {
+              const gifts = [...(formData.specificBequests || [])];
+              // @ts-ignore
+              gifts[i].item[f] = v;
+              setFormData({ ...formData, specificBequests: gifts });
+            }} />
           </div>
 
           <div className="space-y-4">
@@ -275,18 +252,13 @@ export default function IntakePage() {
           </div>
         </div>
       ))}
-      {(formData.specificBequests || []).length === 0 && (
-        <div className="text-center py-8 border-2 border-dashed rounded-lg text-muted-foreground text-sm italic">
-          No specific gifts added yet. Click "Add Gift" to start.
-        </div>
-      )}
     </div>
   );
 
   const ResiduarySection = () => (
     <div className="space-y-6 animate-in fade-in duration-500 pt-6">
       <div className="flex justify-between items-center">
-        <Label className="text-lg">
+        <Label className="text-lg font-headline">
           {distributionStrategy === 'percentage' ? "All my assets will go to the following beneficiaries" : "The Residue (Remainder)"}
           <LegalNote title={distributionStrategy === 'percentage' ? "Pooled Distribution" : "Residuary Estate"}>
             <p><strong>Definition:</strong> This refers to everything you own that has not been specifically gifted elsewhere in the Will, after all your debts, funeral expenses, and taxes have been paid.</p>
@@ -455,7 +427,7 @@ export default function IntakePage() {
                 )}
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex justify-between items-center">
-                    <Label className="text-lg">Children</Label>
+                    <Label className="text-lg font-headline">Children</Label>
                     <Button variant="outline" size="sm" onClick={() => setFormData({...formData, children: [...(formData.children || []), { name: '', nric: '', dob: '' }]})}>
                       <Plus className="h-4 w-4 mr-2" /> Add Child
                     </Button>
@@ -491,7 +463,7 @@ export default function IntakePage() {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <Label className="text-lg">Executors <LegalNote title="Executor Selection">
+                    <Label className="text-lg font-headline">Executors <LegalNote title="Executor Selection">
                       <p><strong>Definition:</strong> The person who gathers your assets, pays your debts, and distributes your estate after death.</p>
                       <p><strong>Tips:</strong> Choose someone you trust implicitly, who is likely to survive you. Most people choose their spouse or adult children.</p>
                       <p><strong>Substitutes:</strong> Adding a substitute executor is NOT mandatory, but recommended if your primary choice is elderly, lives overseas, or may be unable to act.</p>
@@ -501,7 +473,7 @@ export default function IntakePage() {
                     </Button>
                   </div>
                   {formData.executors.map((exec, i) => (
-                    <div key={i} className="p-4 border rounded-lg space-y-4 relative">
+                    <div key={i} className="p-4 border rounded-lg space-y-4 relative group">
                       <div className="flex justify-between items-center">
                         <Badge variant={exec.isSubstitute ? "outline" : "default"}>{exec.isSubstitute ? "Substitute Executor" : "Primary Executor"}</Badge>
                         {exec.isSubstitute && <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive cursor-pointer" onClick={() => {
@@ -528,7 +500,7 @@ export default function IntakePage() {
 
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
-                    <Label className="text-lg">Trustees <LegalNote title="Trustee vs Executor">
+                    <Label className="text-lg font-headline">Trustees <LegalNote title="Trustee vs Executor">
                       <p><strong>Executor:</strong> Handles administrative tasks (debts, legal paperwork).</p>
                       <p><strong>Trustee:</strong> Manages assets for long-term (e.g., holding money for children until they reach 21).</p>
                       <p><strong>Tip:</strong> Usually, the executor and trustee are the <strong>same person</strong>.</p>
@@ -543,7 +515,7 @@ export default function IntakePage() {
 
                 {(formData.children || []).length > 0 && (
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-lg">Guardian <LegalNote title="Legal Guardian">
+                    <Label className="text-lg font-headline">Guardian <LegalNote title="Legal Guardian">
                       <p>The person responsible for raising minor children if both parents pass away before they reach 21.</p>
                     </LegalNote></Label>
                     <div className="grid grid-cols-2 gap-4">
@@ -603,7 +575,12 @@ export default function IntakePage() {
                         <h3 className="font-bold text-primary flex items-center gap-2">
                           <Briefcase className="h-5 w-5" /> Schedule of Assets (Recommended)
                         </h3>
-                        <Button variant="outline" size="sm" onClick={addAssetToSchedule} className="bg-white">
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setFormData({
+                            ...formData,
+                            assetSchedule: [...(formData.assetSchedule || []), { type: 'Bank Account' }]
+                          });
+                        }} className="bg-white">
                           <Plus className="h-4 w-4 mr-2" /> Add Asset
                         </Button>
                       </div>
@@ -612,10 +589,19 @@ export default function IntakePage() {
                       <div className="space-y-6">
                         {(formData.assetSchedule || []).map((asset, i) => (
                           <div key={i} className="bg-white p-6 rounded-lg border shadow-sm relative group">
-                            <Button variant="ghost" size="icon" className="absolute right-2 top-2 h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAssetFromSchedule(i)}>
+                            <Button variant="ghost" size="icon" className="absolute right-2 top-2 h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => {
+                              const assets = [...(formData.assetSchedule || [])];
+                              assets.splice(i, 1);
+                              setFormData({ ...formData, assetSchedule: assets });
+                            }}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                            <AssetFields asset={asset} onUpdate={(f, v) => updateAssetInSchedule(i, f, v)} />
+                            <AssetFields asset={asset} onUpdate={(f, v) => {
+                              const assets = [...(formData.assetSchedule || [])];
+                              // @ts-ignore
+                              assets[i][f] = v;
+                              setFormData({ ...formData, assetSchedule: assets });
+                            }} />
                           </div>
                         ))}
                         {(formData.assetSchedule || []).length === 0 && <div className="text-center py-6 border-2 border-dashed rounded-lg text-muted-foreground text-xs italic">No assets listed yet.</div>}
