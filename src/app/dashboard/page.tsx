@@ -12,7 +12,7 @@ import { Clock, CheckCircle, LayoutDashboard, Database, Activity, UserPlus } fro
 
 const MOCK_CASES = [
   { id: '1', client: 'Tan Ah Kow', status: 'Ready for Review', date: '2024-05-20', type: 'Simple Will' },
-  { id: '2', client: 'Siti Aminah', status: 'AI Processing', date: '2024-05-21', type: 'Complex Trust' },
+  { id: '2', client: 'Siti Aminah', status: 'Processing', date: '2024-05-21', type: 'Complex Trust' },
   { id: '3', client: 'Rajesh Kumar', status: 'Completed', date: '2024-05-18', type: 'Simple Will' },
 ];
 
@@ -24,7 +24,7 @@ export default function DashboardPage() {
     if (lastDraft) {
       const parsed = JSON.parse(lastDraft);
       setCases(prev => [
-        { id: 'new', client: parsed.input.clientName, status: 'Ready for Review', date: new Date().toISOString().split('T')[0], type: 'Draft Generated' },
+        { id: 'new', client: parsed.input.clientName, status: 'Ready for Review', date: new Date().toISOString().split('T')[0], type: 'Intake Completed' },
         ...prev
       ]);
     }
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         </nav>
         <div className="p-4 border-t">
           <div className="bg-primary/5 p-4 rounded-lg">
-            <p className="text-[10px] font-bold text-primary uppercase mb-1">Solicitor Mode</p>
+            <p className="text-[10px] font-bold text-primary uppercase mb-1">Lawyer Mode</p>
             <p className="text-sm font-medium">Partner Portal</p>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function DashboardPage() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-headline text-[#333333]">Partner Dashboard</h1>
-            <p className="text-muted-foreground font-body">Vetting digital intakes for Forward Legal Singapore.</p>
+            <p className="text-muted-foreground font-body">Reviewing digital intakes for Forward Legal Singapore.</p>
           </div>
           <Button className="bg-primary text-white hover:bg-primary/90" asChild>
             <Link href="/intake"><UserPlus className="mr-2 h-4 w-4" /> New Intake</Link>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/cases/${c.id}/review`}>VET DRAFT</Link>
+                      <Link href={`/cases/${c.id}/review`}>PREPARE DRAFT</Link>
                     </Button>
                   </TableCell>
                 </TableRow>

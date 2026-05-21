@@ -14,7 +14,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">Firm Profile</Link>
             <Button asChild variant="default" className="bg-primary hover:bg-primary/90">
-              <Link href="/dashboard">Solicitor Access</Link>
+              <Link href="/dashboard">Lawyer Access</Link>
             </Button>
           </nav>
         </div>
@@ -28,7 +28,7 @@ export default function Home() {
               Modern Will Drafting for <span className="text-primary">Singapore</span>.
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto font-body">
-              A high-precision intake system by Forward Legal. Secure, comprehensive, and solicitor-vetted.
+              A high-precision intake system by Forward Legal. Secure, comprehensive, and lawyer-prepared.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button size="lg" className="bg-primary text-white text-lg px-8 h-14 hover:bg-primary/90" asChild>
@@ -57,9 +57,9 @@ export default function Home() {
                 <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
                   <ShieldCheck className="h-7 w-7" />
                 </div>
-                <h3 className="text-2xl font-headline text-[#333333]">Solicitor Review</h3>
+                <h3 className="text-2xl font-headline text-[#333333]">Lawyer Review</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Every draft undergoes a rigorous vetting process by our qualified solicitors before finalization.
+                  Every document is prepared and vetted by our qualified lawyers before finalization and signing.
                 </p>
               </div>
               <div className="space-y-4">

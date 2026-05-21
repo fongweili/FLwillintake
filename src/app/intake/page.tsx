@@ -46,6 +46,7 @@ export default function IntakePage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Logic remains to create the initial document state, but UI reflects "Forwarding"
       const draft = await generateFirstWillDraft(formData);
       localStorage.setItem('last_draft_data', JSON.stringify({ input: formData, draft }));
       router.push('/dashboard');
@@ -110,12 +111,12 @@ export default function IntakePage() {
                     <CheckCircle2 className="h-5 w-5" /> A Warm Welcome from Forward Legal
                   </h3>
                   <p className="text-sm text-[#555555] leading-relaxed">
-                    We are honored to assist you with your estate planning. This questionnaire is designed to capture all necessary details to draft a robust Will under the <strong>Singapore Wills Act</strong>. 
+                    We are honored to assist you with your estate planning. This questionnaire is designed to capture all necessary details to prepare a robust Will under the <strong>Singapore Wills Act</strong>. 
                   </p>
                   <ul className="text-xs text-[#666666] space-y-1 list-disc pl-4">
                     <li>Your data is encrypted and kept strictly confidential.</li>
-                    <li>The info provided will be used to generate a draft for solicitor review.</li>
-                    <li>Once vetted, we will contact you to finalize the document for signing.</li>
+                    <li>The information provided will be forwarded to our lawyers who will prepare a draft for your review.</li>
+                    <li>Once the draft is ready, we will contact you to finalize and arrange for the legal signing.</li>
                   </ul>
                 </div>
 
@@ -230,7 +231,7 @@ export default function IntakePage() {
                       <p><strong>Definition:</strong> The person who gathers your assets, pays your debts, and distributes your estate after death.</p>
                       <p><strong>Tips:</strong> Choose someone you trust implicitly, who is responsible, and likely to be around. Most people choose their spouse or adult children.</p>
                     </LegalNote></Label>
-                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: true }]})}>
+                    <Button variant="outline" size="sm" onClick={() => setFormData({...formData, executors: [...formData.executors, { name: '', nric: '', relationship: '', isSubstitute: false }]})}>
                       <Plus className="h-4 w-4 mr-2" /> Add Substitute
                     </Button>
                   </div>
@@ -279,7 +280,7 @@ export default function IntakePage() {
                     </p>
                   ) : (
                     <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground text-xs">
-                      [Trustee management fields enabled - Solicitors will contact you for these details]
+                      [Trustee management fields enabled - Lawyers will contact you for these details]
                     </div>
                   )}
                 </div>
@@ -365,7 +366,7 @@ export default function IntakePage() {
                 <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
                   <h4 className="font-bold text-primary mb-2 flex items-center gap-2">Legal Acknowledgement</h4>
                   <p className="text-xs text-[#555555] leading-relaxed">
-                    By submitting, I confirm these details are accurate. I understand Forward Legal will use this to draft my Will under Singapore law, which must be signed in the presence of two witnesses.
+                    By submitting, I confirm these details are accurate. I understand Forward Legal lawyers will use this to prepare my Will under Singapore law, which must be signed in the presence of two witnesses.
                   </p>
                 </div>
               </div>
@@ -381,7 +382,7 @@ export default function IntakePage() {
                 </Button>
               ) : (
                 <Button className="bg-primary hover:bg-primary/90 text-white min-w-[200px]" onClick={handleSubmit} disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing Draft...</> : "Submit to Forward Legal"}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting to Lawyers...</> : "Submit to Forward Legal"}
                 </Button>
               )}
             </div>

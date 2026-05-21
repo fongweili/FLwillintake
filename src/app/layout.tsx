@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'FORWARD LEGAL | Professional Will Drafting',
-  description: 'AI-powered legal document generation and review platform for Forward Legal Singapore.',
+  description: 'Digital intake platform for Forward Legal Singapore. Information provided is forwarded to our lawyers who will prepare a draft for your review.',
 };
 
 export default function RootLayout({
