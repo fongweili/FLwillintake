@@ -6,6 +6,17 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const AssetDetailSchema = z.object({
+  type: z.string(),
+  // Structured details for better legal drafting
+  bankName: z.string().optional(),
+  accountNumber: z.string().optional(),
+  address: z.string().optional(),
+  ownershipShare: z.string().optional(),
+  plateNumber: z.string().optional(),
+  description: z.string().optional(), // For "Others" or general details
+});
+
 const WillIntakeInputSchema = z.object({
   clientName: z.string().describe('The full legal name of the testator.'),
   nric: z.string().describe('The NRIC or Passport number of the testator.'),
@@ -32,7 +43,7 @@ const WillIntakeInputSchema = z.object({
   guardianNric: z.string().optional(),
   specificBequests: z.array(
     z.object({
-      item: z.string().describe('Description of the specific asset/gift.'),
+      item: AssetDetailSchema.describe('Description of the specific asset/gift.'),
       beneficiaryName: z.string(),
       beneficiaryNric: z.string(),
     })
@@ -44,12 +55,7 @@ const WillIntakeInputSchema = z.object({
       percentage: z.string().describe('Percentage share of the residue (e.g. "50%").'),
     })
   ).describe('How the remaining estate is distributed.'),
-  assetSchedule: z.array(
-    z.object({
-      type: z.string(),
-      details: z.string(),
-    })
-  ).optional().describe('A non-mandatory list of assets for the executor.'),
+  assetSchedule: z.array(AssetDetailSchema).optional().describe('A non-mandatory list of assets for the executor.'),
   funeralWishes: z.string().optional(),
 });
 
@@ -67,7 +73,7 @@ const willDraftPrompt = ai.definePrompt({
   input: { schema: WillIntakeInputSchema },
   output: { schema: WillDraftOutputSchema },
   prompt: `You are an expert lawyer at FORWARD LEGAL. 
-Draft a professional "Last Will and Testament".
+Draft a professional "Last Will and Testament" suitable for the Singapore context.
 
 Use the following data:
 Testator: {{{clientName}}} (NRIC: {{{nric}}})
@@ -87,12 +93,12 @@ Executors:
 {{/each}}
 
 {{#if guardianName}}
-Guardian: {{{guardianName}}} ({{{this.guardianNric}}})
+Guardian: {{{guardianName}}} (NRIC: {{{guardianNric}}})
 {{/if}}
 
 Specific Gifts:
 {{#each specificBequests}}
-- Gift: {{{this.item}}} to {{{this.beneficiaryName}}} ({{{this.beneficiaryNric}}})
+- Gift: {{#if this.item.address}}Property at {{{this.item.address}}} (Share: {{{this.item.ownershipShare}}}){{else if this.item.bankName}}Bank Account at {{{this.item.bankName}}} (A/C: {{{this.item.accountNumber}}}){{else if this.item.plateNumber}}Vehicle {{{this.item.plateNumber}}}{{else}}{{{this.item.description}}}{{/if}} to {{{this.beneficiaryName}}} ({{{this.beneficiaryNric}}})
 {{/each}}
 
 Residue (everything else):
@@ -101,9 +107,9 @@ Residue (everything else):
 {{/each}}
 
 {{#if assetSchedule}}
-Schedule of Assets (For reference):
+Schedule of Assets (For reference of the Executor):
 {{#each assetSchedule}}
-- {{{this.type}}}: {{{this.details}}}
+- {{{this.type}}}: {{#if this.address}}{{{this.address}}} (Share: {{{this.ownershipShare}}}){{else if this.bankName}}{{{this.bankName}}} (A/C: {{{this.accountNumber}}}){{else if this.plateNumber}}Vehicle {{{this.plateNumber}}}{{else}}{{{this.description}}}{{/if}}
 {{/each}}
 {{/if}}
 
@@ -111,12 +117,12 @@ STRUCTURE:
 1. Preamble & Revocation of previous wills.
 2. Appointment of Executors and Trustees.
 3. Appointment of Guardians (if applicable).
-4. Specific Legacies.
-5. Distribution of Residuary Estate.
+4. Specific Legacies (incorporate the specific gifts listed).
+5. Distribution of Residuary Estate (incorporate the percentage splits).
 6. Funeral Wishes (if applicable).
-7. Execution Clause.
+7. Execution Clause (Witness signatures).
 
-Provide a polished, legally robust draft for review by the Forward Legal team.`,
+Provide a polished, legally robust draft for review by the Forward Legal team. Ensure clarity on the roles of Executors and Trustees.`,
 });
 
 const willDraftFlow = ai.defineFlow(
