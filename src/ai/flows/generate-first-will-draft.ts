@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A professional lawyer engine for generating a first draft of a legal Will.
@@ -45,6 +44,12 @@ const WillIntakeInputSchema = z.object({
       percentage: z.string().describe('Percentage share of the residue (e.g. "50%").'),
     })
   ).describe('How the remaining estate is distributed.'),
+  assetSchedule: z.array(
+    z.object({
+      type: z.string(),
+      details: z.string(),
+    })
+  ).optional().describe('A non-mandatory list of assets for the executor.'),
   funeralWishes: z.string().optional(),
 });
 
@@ -95,6 +100,13 @@ Residue (everything else):
 - {{{this.name}}} ({{{this.nric}}}): {{{this.percentage}}}
 {{/each}}
 
+{{#if assetSchedule}}
+Schedule of Assets (For reference):
+{{#each assetSchedule}}
+- {{{this.type}}}: {{{this.details}}}
+{{/each}}
+{{/if}}
+
 STRUCTURE:
 1. Preamble & Revocation of previous wills.
 2. Appointment of Executors and Trustees.
@@ -104,7 +116,7 @@ STRUCTURE:
 6. Funeral Wishes (if applicable).
 7. Execution Clause.
 
-Provide a polished, legally robust draft for review.`,
+Provide a polished, legally robust draft for review by the Forward Legal team.`,
 });
 
 const willDraftFlow = ai.defineFlow(

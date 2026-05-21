@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -16,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { generateFirstWillDraft, type WillIntakeInput } from '@/ai/flows/generate-first-will-draft';
-import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2, Gift, Percent, Layers, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Info, Plus, Trash2, Users, CheckCircle2, Gift, Percent, Layers, User, Briefcase } from 'lucide-react';
 
 export default function IntakePage() {
   const router = useRouter();
@@ -35,6 +34,7 @@ export default function IntakePage() {
     residuaryDistribution: [{ name: '', nric: '', percentage: '100%' }],
     specificBequests: [],
     children: [],
+    assetSchedule: [],
   });
 
   const nextStep = () => {
@@ -54,7 +54,6 @@ export default function IntakePage() {
     const val = kids[index].dob;
     if (!val) return;
 
-    // Try parsing common formats
     const d = new Date(val);
     if (!isNaN(d.getTime())) {
       kids[index].dob = format(d, 'dd-MM-yyyy');
@@ -104,11 +103,29 @@ export default function IntakePage() {
     </TooltipProvider>
   );
 
-  // Helper to get all family members entered so far
   const familyMembers = [
     ...(formData.spouseName ? [{ name: formData.spouseName, nric: formData.spouseNric || '', relationship: 'Spouse' }] : []),
     ...(formData.children || []).map(c => ({ name: c.name, nric: c.nric, relationship: 'Child' }))
   ];
+
+  const addAsset = () => {
+    setFormData({
+      ...formData,
+      assetSchedule: [...(formData.assetSchedule || []), { type: 'Bank Account', details: '' }]
+    });
+  };
+
+  const removeAsset = (index: number) => {
+    const assets = [...(formData.assetSchedule || [])];
+    assets.splice(index, 1);
+    setFormData({ ...formData, assetSchedule: assets });
+  };
+
+  const updateAsset = (index: number, field: 'type' | 'details', value: string) => {
+    const assets = [...(formData.assetSchedule || [])];
+    assets[index][field] = value;
+    setFormData({ ...formData, assetSchedule: assets });
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30 py-12 px-4">
@@ -371,13 +388,16 @@ export default function IntakePage() {
                   </RadioGroup>
                 </div>
 
-                {distributionStrategy === 'percentage' && (
+                {(distributionStrategy === 'percentage' || distributionStrategy === 'hybrid') && (
                   <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
                     <div className="flex justify-between items-center">
-                      <Label className="text-lg">The Residue <LegalNote title="Everything Else">
-                        <p><strong>Definition:</strong> "The Residue" is simply everything you own that has not been given as a specific gift, after debts and taxes are paid.</p>
-                        <p>With this option, your lawyers will include a <strong>Schedule of Assets</strong> in the will. Your executor will identify your assets (bank accounts, property, etc.) and split the total value by these percentages.</p>
-                      </LegalNote></Label>
+                      <Label className="text-lg">
+                        {distributionStrategy === 'percentage' ? "All my assets will go to the following beneficiaries" : "The Residue"}
+                        <LegalNote title={distributionStrategy === 'percentage' ? "Full Distribution" : "Remaining Assets"}>
+                          <p><strong>Definition:</strong> This section defines who receives the bulk of your estate after debts, taxes, and (if applicable) specific gifts are handled.</p>
+                          <p>Your lawyers will include a <strong>Schedule of Assets</strong> in the will to help your executor identify your holdings.</p>
+                        </LegalNote>
+                      </Label>
                       <Button variant="outline" size="sm" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
                         <Plus className="h-4 w-4 mr-2" /> Add Beneficiary
                       </Button>
@@ -438,7 +458,7 @@ export default function IntakePage() {
                   </div>
                 )}
 
-                {(distributionStrategy === 'specific' || distributionStrategy === 'hybrid') && (
+                {distributionStrategy === 'specific' && (
                   <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
                     <div className="flex justify-between items-center">
                       <Label className="text-lg">Specific Gifts <LegalNote title="Specific Legacies">
@@ -507,53 +527,69 @@ export default function IntakePage() {
                   </div>
                 )}
 
-                {distributionStrategy === 'hybrid' && (
-                  <div className="space-y-6 pt-6 border-t animate-in fade-in duration-700">
-                    <Label className="text-lg">The Residue <LegalNote title="Everything Else">
-                      <p>After giving the specific gifts listed above, how should the <strong>remaining</strong> assets (the residue) be split?</p>
-                    </LegalNote></Label>
-                    <div className="space-y-4">
-                      {formData.residuaryDistribution.map((dist, i) => (
-                        <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                           <div className="md:col-span-5">
-                             <div className="flex gap-2">
-                               <Input placeholder="Name" className="flex-1" value={dist.name} onChange={(e) => {
-                                  const d = [...formData.residuaryDistribution]; d[i].name = e.target.value; setFormData({...formData, residuaryDistribution: d});
-                               }} />
-                               {familyMembers.length > 0 && (
-                                <Select onValueChange={(val) => {
-                                  const member = familyMembers[parseInt(val)];
-                                  if (!member) return;
-                                  const d = [...formData.residuaryDistribution];
-                                  d[i] = { ...d[i], name: member.name, nric: member.nric };
-                                  setFormData({ ...formData, residuaryDistribution: d });
-                                }}>
-                                  <SelectTrigger className="w-10 px-2"><Users className="h-4 w-4" /></SelectTrigger>
-                                  <SelectContent>
-                                    {familyMembers.map((m, idx) => (
-                                      <SelectItem key={idx} value={idx.toString()}>{m.name}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                               )}
-                             </div>
-                           </div>
-                           <div className="md:col-span-4"><Input placeholder="NRIC" value={dist.nric} onChange={(e) => {
-                              const d = [...formData.residuaryDistribution]; d[i].nric = e.target.value; setFormData({...formData, residuaryDistribution: d});
-                           }} /></div>
-                           <div className="md:col-span-3 flex gap-2">
-                             <Input placeholder="%" value={dist.percentage} onChange={(e) => {
-                               const d = [...formData.residuaryDistribution]; d[i].percentage = e.target.value; setFormData({...formData, residuaryDistribution: d});
-                             }} />
-                             {i > 0 && <Button variant="ghost" size="icon" onClick={() => {
-                               const d = [...formData.residuaryDistribution]; d.splice(i, 1); setFormData({...formData, residuaryDistribution: d});
-                             }}><Trash2 className="h-4 w-4" /></Button>}
-                           </div>
-                        </div>
-                      ))}
-                      <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => setFormData({...formData, residuaryDistribution: [...formData.residuaryDistribution, { name: '', nric: '', percentage: '' }]})}>
-                        + Add Residual Beneficiary
-                      </Button>
+                {/* Optional Schedule of Assets for Strategy 1 and 3 */}
+                {(distributionStrategy === 'percentage' || distributionStrategy === 'hybrid') && (
+                  <div className="space-y-6 pt-8 border-t">
+                    <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-primary flex items-center gap-2">
+                          <Briefcase className="h-5 w-5" /> Schedule of Assets (Highly Recommended)
+                        </h3>
+                        <Button variant="outline" size="sm" onClick={addAsset} className="bg-white">
+                          <Plus className="h-4 w-4 mr-2" /> Add Asset
+                        </Button>
+                      </div>
+                      <p className="text-xs text-[#555555] leading-relaxed mb-6">
+                        A Schedule of Assets is not mandatory, but it significantly helps your executors identify and locate your holdings (e.g., bank accounts, properties) after your passing. You can update this list in the future by simply revising your Will.
+                      </p>
+
+                      <div className="space-y-4">
+                        {(formData.assetSchedule || []).map((asset, i) => (
+                          <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start bg-white p-4 rounded-lg border shadow-sm">
+                            <div className="md:col-span-4 space-y-2">
+                              <Label className="text-[10px] uppercase">Asset Category</Label>
+                              <Select value={asset.type} onValueChange={(val) => updateAsset(i, 'type', val)}>
+                                <SelectTrigger className="h-9">
+                                  <SelectValue placeholder="Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Bank Account">Bank Account</SelectItem>
+                                  <SelectItem value="Property (HDB)">Property (HDB)</SelectItem>
+                                  <SelectItem value="Property (Private)">Property (Private)</SelectItem>
+                                  <SelectItem value="Insurance Policy">Insurance Policy</SelectItem>
+                                  <SelectItem value="Financial Products">Financial Products</SelectItem>
+                                  <SelectItem value="Vehicle">Vehicle</SelectItem>
+                                  <SelectItem value="Personal Items">Personal Items (e.g. Jewellery)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="md:col-span-7 space-y-2">
+                              <Label className="text-[10px] uppercase">Asset Details</Label>
+                              <Input 
+                                className="h-9"
+                                placeholder={
+                                  asset.type === 'Bank Account' ? "e.g. DBS Savings 123-456-789" :
+                                  asset.type.includes('Property') ? "e.g. 123 Orchard Rd, Singapore 238888" :
+                                  "Provide specific identification details..."
+                                }
+                                value={asset.details}
+                                onChange={(e) => updateAsset(i, 'details', e.target.value)}
+                              />
+                            </div>
+                            <div className="md:col-span-1 pt-6 text-right">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeAsset(i)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {(formData.assetSchedule || []).length === 0 && (
+                          <div className="text-center py-6 border-2 border-dashed rounded-lg text-muted-foreground text-xs italic">
+                            No assets listed yet. Click "Add Asset" to start your schedule.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
