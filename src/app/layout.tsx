@@ -3,8 +3,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'LegisDraft | Professional Legal Drafting',
-  description: 'AI-powered legal document generation and review platform.',
+  title: 'FORWARD LEGAL | Professional Will Drafting',
+  description: 'AI-powered legal document generation and review platform for Forward Legal Singapore.',
 };
 
 export default function RootLayout({

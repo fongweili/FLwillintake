@@ -7,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Scale, Clock, CheckCircle, FileText, LayoutDashboard, Database, Activity } from 'lucide-react';
+import { Scale, Clock, CheckCircle, FileText, LayoutDashboard, Database, Activity, UserPlus } from 'lucide-react';
 
 const MOCK_CASES = [
-  { id: '1', client: 'Alice Johnson', status: 'Ready for Review', date: '2024-05-20', type: 'Simple Will' },
-  { id: '2', client: 'Robert Smith', status: 'AI Processing', date: '2024-05-21', type: 'Complex Trust' },
-  { id: '3', client: 'Emily Davis', status: 'Completed', date: '2024-05-18', type: 'Simple Will' },
-  { id: '4', client: 'Michael Brown', status: 'Waiting on Client', date: '2024-05-15', type: 'Estate Plan' },
+  { id: '1', client: 'Tan Ah Kow', status: 'Ready for Review', date: '2024-05-20', type: 'Simple Will' },
+  { id: '2', client: 'Siti Aminah', status: 'AI Processing', date: '2024-05-21', type: 'Complex Trust' },
+  { id: '3', client: 'Rajesh Kumar', status: 'Completed', date: '2024-05-18', type: 'Simple Will' },
 ];
 
 export default function DashboardPage() {
@@ -24,7 +23,7 @@ export default function DashboardPage() {
     if (lastDraft) {
       const parsed = JSON.parse(lastDraft);
       setCases(prev => [
-        { id: 'new', client: parsed.input.clientName, status: 'Ready for Review', date: new Date().toISOString().split('T')[0], type: 'Will Draft' },
+        { id: 'new', client: parsed.input.clientName, status: 'Ready for Review', date: new Date().toISOString().split('T')[0], type: 'Draft Generated' },
         ...prev
       ]);
     }
@@ -36,7 +35,7 @@ export default function DashboardPage() {
       <aside className="w-64 border-r bg-white flex flex-col hidden lg:flex">
         <div className="p-6 flex items-center gap-2 border-b">
           <Scale className="h-6 w-6 text-primary" />
-          <span className="font-headline text-lg text-primary">LegisDraft</span>
+          <span className="font-headline text-lg text-primary">FORWARD LEGAL</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <Button variant="ghost" className="w-full justify-start gap-2 bg-secondary/50" asChild>
@@ -46,16 +45,13 @@ export default function DashboardPage() {
             <Link href="/vault"><Database className="h-4 w-4" /> Case Vault</Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start gap-2" asChild>
-            <Link href="/monitoring"><Activity className="h-4 w-4" /> AI Monitoring</Link>
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" asChild>
-            <Link href="/designer"><FileText className="h-4 w-4" /> Logic Designer</Link>
+            <Link href="/monitoring"><Activity className="h-4 w-4" /> Engine Status</Link>
           </Button>
         </nav>
         <div className="p-4 border-t">
-          <div className="bg-secondary/20 p-4 rounded-lg">
-            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">AI Performance</p>
-            <p className="text-sm text-primary font-bold">98.4% Accuracy</p>
+          <div className="bg-primary/5 p-4 rounded-lg">
+            <p className="text-[10px] font-bold text-primary uppercase mb-1">Solicitor Mode</p>
+            <p className="text-sm font-medium">Logged in as Partner</p>
           </div>
         </div>
       </aside>
@@ -64,74 +60,78 @@ export default function DashboardPage() {
       <main className="flex-1 p-8">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-headline">Case Dashboard</h1>
-            <p className="text-muted-foreground">Manage and review drafts collated by AI.</p>
+            <h1 className="text-3xl font-headline">Partner Dashboard</h1>
+            <p className="text-muted-foreground font-body">Reviewing digital intakes for Forward Legal Singapore.</p>
           </div>
-          <Button className="bg-accent hover:bg-accent/90">Refresh Status</Button>
+          <Button className="bg-accent hover:bg-accent/90" asChild>
+            <Link href="/intake"><UserPlus className="mr-2 h-4 w-4" /> New Intake</Link>
+          </Button>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+          <Card className="border-none shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
               <Clock className="h-4 w-4 text-accent" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">4</div>
-              <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+              <p className="text-xs text-muted-foreground">Requires partner attention</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-none shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CardTitle className="text-sm font-medium">Completed (May)</CardTitle>
               <CheckCircle className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">128</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <div className="text-2xl font-bold">42</div>
+              <p className="text-xs text-muted-foreground">Standardized wills executed</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-none shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">AI Load</CardTitle>
+              <CardTitle className="text-sm font-medium">Drafting Accuracy</CardTitle>
               <Activity className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Normal</div>
-              <p className="text-xs text-muted-foreground">Average wait: 45s</p>
+              <div className="text-2xl font-bold">99.2%</div>
+              <p className="text-xs text-muted-foreground">AI validation score</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Submission Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cases.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell className="font-medium">{c.client}</TableCell>
-                <TableCell>{c.type}</TableCell>
-                <TableCell>{c.date}</TableCell>
-                <TableCell>
-                  <Badge variant={c.status === 'Ready for Review' ? 'default' : 'secondary'} className={c.status === 'Ready for Review' ? 'bg-accent' : ''}>
-                    {c.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/cases/${c.id}/review`}>Review Case</Link>
-                  </Button>
-                </TableCell>
+        <Card className="border-none shadow-lg">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-headline">Client Name</TableHead>
+                <TableHead className="font-headline">Case Type</TableHead>
+                <TableHead className="font-headline">Submitted</TableHead>
+                <TableHead className="font-headline">Status</TableHead>
+                <TableHead className="text-right font-headline">Action</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
+            </TableHeader>
+            <TableBody>
+              {cases.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.client}</TableCell>
+                  <TableCell>{c.type}</TableCell>
+                  <TableCell>{c.date}</TableCell>
+                  <TableCell>
+                    <Badge variant={c.status === 'Ready for Review' ? 'default' : 'secondary'} className={c.status === 'Ready for Review' ? 'bg-accent' : ''}>
+                      {c.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/cases/${c.id}/review`}>VET DRAFT</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       </main>
     </div>
